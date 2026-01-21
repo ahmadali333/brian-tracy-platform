@@ -181,8 +181,8 @@ export const NavbarMenuIcon = () => {
               navigate("/");
             }}
           >
-            <img src="/logo.png" alt="Logo" className="w-9 h-9 dark:hidden" />
-            <img src="/logo-white.png" alt="Logo" className="w-9 h-9 hidden dark:block" />
+            <img src="/logo.png" alt="Forrof Logo" title="Forrof" className="w-9 h-9 dark:hidden" />
+            <img src="/logo-white.png" alt="Forrof Logo" title="Forrof" className="w-9 h-9 hidden dark:block" />
             <motion.span
               className="text-3xl font-bold tracking-tight inline-block"
               style={{ opacity: logoTextOpacity, y: logoTextY }}
@@ -192,15 +192,18 @@ export const NavbarMenuIcon = () => {
           </motion.div>
 
           {/* Menu Actions */}
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-1 md:gap-4">
             {/* Theme Toggle - Left of Music Player */}
-            <ThemeToggle />
-
+            <Magnetic strength={0.2}>
+              <ThemeToggle />
+            </Magnetic>
             {/* Music Player - Right of Menu */}
-            <MusicPlayer />
+            <Magnetic strength={0.2}>
+              <MusicPlayer />
+            </Magnetic>
             <Magnetic strength={0.2}>
               <motion.button
-                className="relative w-12 h-12 flex items-center justify-center"
+                className="relative w-12 h-12 flex items-center justify-center rounded-full border border-foreground/10 hover:border-foreground/30 transition-colors bg-background/50 backdrop-blur-sm"
                 onClick={() => setIsOpen(!isOpen)}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
@@ -221,7 +224,7 @@ export const NavbarMenuIcon = () => {
                       transition={{ duration: 0.4 }}
                     >
                       <Ellipsis
-                        size={50}
+                        size={30}
                         strokeWidth={3}
                         className="relative z-10 font-extrabold"
                       />
