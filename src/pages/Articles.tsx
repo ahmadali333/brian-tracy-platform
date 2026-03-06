@@ -12,6 +12,10 @@ import { usePageMetadata } from "@/hooks/usePageMetadata";
 import { api } from "@/services/api";
 import DOMPurify from "dompurify";
 
+// Generate a unique avatar URL per blog using DiceBear
+const getAvatarUrl = (seed: string | number) =>
+  `https://api.dicebear.com/9.x/notionists/svg?seed=${encodeURIComponent(String(seed))}`;
+
 // Helper for author if API doesn't return full object
 const getAuthor = (author: any) => {
   if (typeof author === 'string') return { name: author, avatar: '', role: 'Author' };
@@ -33,7 +37,7 @@ const Articles = () => {
         image: b.blogImage || 'https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?auto=format&fit=crop&q=80', // Fallback
         category: 'Article',
         excerpt: b.content?.substring(0, 100) + '...',
-        author: { name: b.author, role: 'Editor', avatar: 'https://github.com/shadcn.png' }
+        author: { name: b.author || 'Admin', role: 'Editor', avatar: getAvatarUrl(b.slug || b.id || b.title) }
       }));
       setArticles(mapped);
     }).catch(() => {});
@@ -338,7 +342,7 @@ const FeaturedArticle = ({ article }: { article: any }) => {
                 src={article.author.avatar}
                 loading="lazy"
                 alt={article.author.name}
-                className="w-12 h-12 rounded-full object-cover"
+                className="w-12 h-12 rounded-full object-cover border border-border"
               />
               <div>
                 <p className="font-medium">{article.author.name}</p>
@@ -437,7 +441,7 @@ const ArticleCard = ({
               src={article.author.avatar}
               loading="lazy"
               alt={article.author.name}
-              className="w-8 h-8 rounded-full object-cover"
+              className="w-8 h-8 rounded-full object-cover border border-border"
             />
             <span className="text-sm font-medium">{article.author.name}</span>
           </div>

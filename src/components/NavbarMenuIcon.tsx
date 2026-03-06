@@ -158,7 +158,11 @@ export const NavbarMenuIcon = () => {
     }
 
     if (href.startsWith("/")) {
-      navigate(href);
+      // Delay navigation slightly to allow exit animation to start
+      setTimeout(() => {
+        navigate(href);
+        window.scrollTo(0, 0);
+      }, 300);
     }
   };
 

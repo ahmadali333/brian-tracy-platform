@@ -96,7 +96,7 @@ const Careers = () => {
             </motion.section>
 
             {/* Job Listings */}
-            <section className="px-6 md:px-12 lg:px-24">
+            <section className="px-6 md:px-12 lg:px-24 mb-24 md:mb-32">
                 <div className="max-w-[1400px] mx-auto">
                     <motion.div
                         initial={{ opacity: 0 }}

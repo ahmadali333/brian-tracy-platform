@@ -15,7 +15,7 @@ import { useNavigate } from "react-router-dom";
 import { projectsData } from "@/data/projects";
 import { usePageMetadata } from "@/hooks/usePageMetadata";
 
-const projectFilters = ["All Projects", "Web Development", "Mobile App"];
+const projectFilters = ["All Projects", "Web Development", "Mobile App", "SaaS"];
 
 // Individual Project Card Component
 const ProjectCard = ({

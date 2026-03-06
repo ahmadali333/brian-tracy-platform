@@ -14,7 +14,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import { projectsData } from "@/data/projects";
 
-const projectFilters = ["All Projects", "Web Development", "Mobile App"];
+const projectFilters = ["All Projects", "Web Development", "Mobile App", "SaaS"];
 
 export const ProjectsSection = () => {
   const navigate = useNavigate();
