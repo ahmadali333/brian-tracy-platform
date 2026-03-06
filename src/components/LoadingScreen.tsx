@@ -3,11 +3,13 @@ import { useEffect, useState } from "react";
 
 interface LoadingScreenProps {
   isLoading: boolean;
+  progress?: number;
   onLoadingComplete?: () => void;
 }
 
 export const LoadingScreen = ({
   isLoading,
+  progress = 0,
   onLoadingComplete,
 }: LoadingScreenProps) => {
   const [displayLoading, setDisplayLoading] = useState(isLoading);
@@ -152,7 +154,7 @@ export const LoadingScreen = ({
               </motion.p>
             </motion.div>
 
-            {/* Animated progress bar */}
+            {/* Dynamic progress bar */}
             <motion.div
               className="w-64 h-1 bg-foreground/10 rounded-full overflow-hidden"
               initial={{ opacity: 0, width: 0 }}
@@ -160,15 +162,10 @@ export const LoadingScreen = ({
               transition={{ duration: 0.8, delay: 0.3 }}
             >
               <motion.div
-                className="h-full bg-gradient-to-r from-foreground/30 via-foreground to-foreground/30 rounded-full"
-                animate={{
-                  x: ["-100%", "100%"],
-                }}
-                transition={{
-                  duration: 1.5,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                }}
+                className="h-full bg-gradient-to-r from-foreground/50 via-foreground to-foreground/50 rounded-full origin-left"
+                initial={{ scaleX: 0 }}
+                animate={{ scaleX: progress / 100 }}
+                transition={{ duration: 0.4, ease: "easeOut" }}
               />
             </motion.div>
 
@@ -216,25 +213,16 @@ export const LoadingScreen = ({
             />
           </motion.div>
 
-          {/* Optional loading percentage */}
+          {/* Loading percentage */}
           <motion.div
             className="absolute bottom-16 text-center"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.8, delay: 0.6 }}
           >
-            <motion.span
-              className="text-xs text-muted-foreground"
-              animate={{
-                opacity: [0.4, 1, 0.4],
-              }}
-              transition={{
-                duration: 1.5,
-                repeat: Infinity,
-              }}
-            >
-              Preparing Your Experience
-            </motion.span>
+            <span className="text-xs text-muted-foreground tabular-nums">
+              {progress}% — Loading assets
+            </span>
           </motion.div>
         </motion.div>
       )}

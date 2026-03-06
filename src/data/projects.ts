@@ -473,7 +473,7 @@ export const projectsData = [
     date: "Jul 2024",
     location: "UK",
     image: `${import.meta.env.VITE_SERVER}/loopiq/loopiq-web%20(1).png`,
-    category: "Web Development",
+    category: "SaaS",
     tags: ["SAAS", "WEB DEVELOPMENT", "UI/UX"],
     overview:
       "Loopiq is a comprehensive SaaS platform designed for businesses to manage customer loops and engagement cycles. The platform provides real-time analytics, automated workflows, and customer journey mapping tools. Built for data-driven marketing teams, Loopiq helps businesses optimize their customer engagement strategies and drive measurable results.",
@@ -645,7 +645,7 @@ export const projectsData = [
     date: "Jun 2024",
     location: "Remote",
     image: `${import.meta.env.VITE_SERVER}/fyno/fyno-web%20(2).png`,
-    category: "Web Development",
+    category: "SaaS",
     tags: ["SAAS", "E-SIGN", "UI/UX"],
     overview:
       "FynoSign is a secure e-signature and document workflow platform built for teams and small businesses. It streamlines signing, templates, and document management with a clean, user-friendly interface.",

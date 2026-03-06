@@ -18,6 +18,9 @@ import { useLenis } from "@/hooks/useLenis";
 import { toast } from "@/hooks/use-toast";
 import { usePageMetadata } from "@/hooks/usePageMetadata";
 
+const getAvatarUrl = (seed: string | number) =>
+  `https://api.dicebear.com/9.x/notionists/svg?seed=${encodeURIComponent(String(seed))}`;
+
 const ArticleDetails = () => {
   useLenis();
   const { id } = useParams<{ id: string }>();
@@ -42,8 +45,8 @@ const ArticleDetails = () => {
           image: data.blogImage,
           tags: data.metaTags ? data.metaTags.split(',').map((t: string) => t.trim()) : [], // Assuming comma separated or array
           author: typeof data.author === 'string'
-            ? { name: data.author, role: 'Editor', avatar: 'https://github.com/shadcn.png' }
-            : data.author || { name: 'Admin', role: 'Editor', avatar: 'https://github.com/shadcn.png' }
+            ? { name: data.author, role: 'Editor', avatar: getAvatarUrl(data.slug || data.id || data.title) }
+            : data.author || { name: 'Admin', role: 'Editor', avatar: getAvatarUrl(data.slug || data.id || data.title) }
         });
         setLoading(false);
       })
@@ -234,7 +237,7 @@ const ArticleContent = ({ article, prevArticle, nextArticle }: { article: any, p
                   src={article.author.avatar}
                   alt={article.author.name}
                   loading="lazy"
-                  className="w-12 h-12 rounded-full object-cover ring-2 ring-primary/20"
+                  className="w-12 h-12 rounded-full object-cover ring-1 ring-primary/20"
                 />
                 <div>
                   <p className="font-medium text-foreground">
@@ -354,7 +357,7 @@ const ArticleContent = ({ article, prevArticle, nextArticle }: { article: any, p
                     src={article.author.avatar}
                     loading="lazy"
                     alt={article.author.name}
-                    className="w-16 h-16 rounded-full object-cover"
+                    className="w-16 h-16 rounded-full object-cover border border-border"
                   />
                   <div>
                     <p className="font-medium">{article.author.name}</p>
