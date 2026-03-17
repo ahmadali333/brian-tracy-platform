@@ -152,6 +152,7 @@ const ProjectDetails = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const containerRef = useRef<HTMLDivElement>(null);
+  const conceptsRef = useRef<HTMLDivElement>(null);
   const location = useLocation();
   const [warpMode, setWarpMode] = useState<WarpMode>("idle");
   const [chargeProgress, setChargeProgress] = useState(0);
@@ -336,16 +337,16 @@ const ProjectDetails = () => {
   }
 
   return (
-    <div ref={containerRef} className="bg-background text-foreground min-h-screen">
+    <div ref={containerRef} className="bg-background text-foreground min-h-screen overflow-x-hidden">
       {/* Warp Transition Overlay */}
       <WarpTransition mode={warpMode} chargeProgress={chargeProgress} />
 
       {/* Hero Section - Clean like MDX */}
-      <section className="px-6 pt-44 pb-20  space-y-12">
+      <section className="px-6 pt-28 md:pt-44 pb-12 md:pb-20 space-y-8 md:space-y-12">
         {/* Title - Large and centered */}
         <div className="overflow-hidden">
           <motion.h1
-            className="text-[14vw] md:text-[12vw] lg:text-[10vw] font-bold leading-[0.9] tracking-tighter text-center pb-7"
+            className="text-[14vw] md:text-[12vw] lg:text-[10vw] font-bold leading-[0.9] tracking-tighter text-center pb-4 md:pb-7"
             initial={{ y: "100%" }}
             animate={{ y: 0 }}
             transition={{
@@ -367,7 +368,7 @@ const ProjectDetails = () => {
           {project.tags.map((tag, index) => (
             <motion.span
               key={tag}
-              className="px-6 py-3 border border-border rounded-full text-[10px] md:text-base uppercase tracking-[0.15em] font-extralight text-muted-foreground"
+              className="px-4 py-2 md:px-6 md:py-3 border border-border rounded-full text-[10px] md:text-base uppercase tracking-[0.15em] font-extralight text-muted-foreground"
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.1 + index * 0.1 }}
@@ -380,13 +381,13 @@ const ProjectDetails = () => {
 
       {/* Hero Image - Full width */}
       <motion.section
-        className="px-6 md:px-12 lg:px-20 pb-20"
+        className="px-4 md:px-12 lg:px-20 pb-12 md:pb-20"
         initial={{ opacity: 0, y: 60 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.4, duration: 0.8 }}
       >
         <div className="max-w-[1600px] mx-auto">
-          <div className="relative w-full aspect-[16/8] rounded-2xl overflow-hidden">
+          <div className="relative w-full aspect-[4/3] md:aspect-[16/8] rounded-2xl overflow-hidden">
             <motion.img
               src={project.image}
               alt={project.title}
@@ -400,7 +401,7 @@ const ProjectDetails = () => {
       </motion.section>
 
       {/* Project Overview */}
-      <section className="px-6 md:px-12 lg:px-20 py-16 md:py-40">
+      <section className="px-6 md:px-12 lg:px-20 py-12 md:py-40">
         <div className="max-w-[1600px] mx-auto">
           <div className="">
             {/* Overview Text */}
@@ -412,7 +413,7 @@ const ProjectDetails = () => {
               transition={{ duration: 0.8 }}
             >
               <motion.h2
-                className="text-3xl uppercase tracking-[0.2em] text-muted-foreground mb-10"
+                className="text-2xl md:text-3xl uppercase tracking-[0.2em] text-muted-foreground mb-6 md:mb-10"
                 initial={{ opacity: 0 }}
                 whileInView={{ opacity: 1 }}
                 viewport={{ once: true }}
@@ -421,7 +422,7 @@ const ProjectDetails = () => {
                 Project overview
               </motion.h2>
               <motion.p
-                className="text-xl md:text-3xl lg:text-4xl leading-[1.4] font-light"
+                className="text-base md:text-3xl lg:text-4xl leading-[1.5] md:leading-[1.4] font-light"
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
@@ -460,13 +461,13 @@ const ProjectDetails = () => {
       <section className="px-6 md:px-12 lg:px-20 py-8 md:py-12">
         <div className="max-w-[1600px] mx-auto">
           {/* Section Header with Blob Effect */}
-          <div className="relative mb-20">
+          <div className="relative mb-10 md:mb-20">
             {/* Blob Background */}
             <div className="absolute -top-20 -left-40 w-96 h-96 bg-gradient-to-r from-primary/20 to-transparent rounded-full blur-3xl opacity-40 pointer-events-none" />
             <div className="absolute -top-10 -right-32 w-80 h-80 bg-gradient-to-l from-primary/15 to-transparent rounded-full blur-3xl opacity-30 pointer-events-none" />
 
             <motion.h2
-              className="text-5xl md:text-7xl lg:text-9xl text-center font-bold mb-20 relative z-10"
+              className="text-4xl md:text-7xl lg:text-9xl text-center font-bold mb-10 md:mb-20 relative z-10"
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
@@ -495,23 +496,23 @@ const ProjectDetails = () => {
       </section>
 
       {/* Initial Concepts - Auto Rotating Marquee */}
-      <section ref={conceptsRef} className="py-24 md:py-40 overflow-hidden">
+      <section ref={conceptsRef} className="py-16 md:py-40 overflow-hidden">
         <style>{`
           @keyframes concept-fwd { from { transform: translate3d(0,0,0); } to { transform: translate3d(-50%,0,0); } }
           @keyframes concept-rev { from { transform: translate3d(-50%,0,0); } to { transform: translate3d(0,0,0); } }
           .concept-row-fwd { display:flex; width:max-content; animation: concept-fwd 40s linear infinite; will-change:transform; backface-visibility:hidden; }
           .concept-row-rev { display:flex; width:max-content; animation: concept-rev 40s linear infinite; will-change:transform; backface-visibility:hidden; }
-          .concept-row-fwd:hover, .concept-row-rev:hover { animation-play-state: paused; }
+          .concept-row-fwd:has(.concept-card:hover), .concept-row-rev:has(.concept-card:hover) { animation-play-state: paused; }
         `}</style>
 
         <div className="md:ml-28 max-md:text-center max-md:px-4">
           <motion.div
-            className="mb-16"
+            className="mb-8 md:mb-16"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
           >
-            <h2 className="text-3xl md:text-5xl uppercase tracking-[0.2em] text-muted-foreground mb-4">
+            <h2 className="text-2xl md:text-5xl uppercase tracking-[0.2em] text-muted-foreground mb-4">
               Initial concepts
             </h2>
           </motion.div>
@@ -524,7 +525,7 @@ const ProjectDetails = () => {
               (concept, index) => (
                 <div
                   key={index}
-                  className="relative shrink-0 w-[300px] md:w-[400px] aspect-[16/10] rounded-xl overflow-hidden group mx-3"
+                  className="concept-card relative shrink-0 w-[75vw] md:w-[400px] aspect-[16/10] rounded-xl overflow-hidden group mx-2 md:mx-3"
                 >
                   <img
                     src={concept}
@@ -547,7 +548,7 @@ const ProjectDetails = () => {
               .map((concept, index) => (
                 <div
                   key={index}
-                  className="relative shrink-0 w-[300px] md:w-[400px] aspect-[16/10] rounded-xl overflow-hidden group mx-3"
+                  className="concept-card relative shrink-0 w-[75vw] md:w-[400px] aspect-[16/10] rounded-xl overflow-hidden group mx-2 md:mx-3"
                 >
                   <img
                     src={concept}
@@ -572,10 +573,10 @@ const ProjectDetails = () => {
             viewport={{ once: true }}
             transition={{ duration: 0.8 }}
           >
-            <h2 className="text-3xl md:text-5xl uppercase tracking-[0.2em] text-muted-foreground mb-12">
+            <h2 className="text-2xl md:text-5xl uppercase tracking-[0.2em] text-muted-foreground mb-8 md:mb-12">
               The challenge
             </h2>
-            <p className="text-xl md:text-3xl lg:text-4xl leading-[1.4] font-light mb-16">
+            <p className="text-lg md:text-3xl lg:text-4xl leading-[1.4] font-light mb-10 md:mb-16">
               {project.challenge}
             </p>
 
@@ -596,7 +597,7 @@ const ProjectDetails = () => {
 
       {/* Collage Gallery */}
       <section className=" py-16 md:py-24">
-        <div className="w-[100vw]">
+        <div className="w-full">
           <div className="w-full">
             {project.gallery.map((img, index) => (
               <motion.div
@@ -623,16 +624,17 @@ const ProjectDetails = () => {
 
       {/* Responsive Showcase - Auto Rotating */}
       {project.responsive && project.responsive.length > 0 && (
-        <section className="py-24 md:py-40 overflow-hidden">
+        <section className="py-16 md:py-40 overflow-hidden">
           <style>{`
             @keyframes resp-scroll { from { transform: translate3d(0,0,0); } to { transform: translate3d(-50%,0,0); } }
             .resp-marquee { display:flex; width:max-content; animation: resp-scroll 45s linear infinite; will-change:transform; backface-visibility:hidden; }
-            .resp-marquee:hover { animation-play-state: paused; }
+            .resp-phone:hover ~ .resp-phone, .resp-phone:hover { }
+            .resp-marquee:has(.resp-phone:hover) { animation-play-state: paused; }
           `}</style>
 
-          <div className="md:ml-28 max-md:text-center max-md:px-4 mb-10">
+          <div className="md:ml-28 max-md:text-center max-md:px-4 mb-6 md:mb-10">
             <motion.h2
-              className="text-3xl md:text-5xl uppercase tracking-[0.2em] text-muted-foreground"
+              className="text-2xl md:text-5xl uppercase tracking-[0.2em] text-muted-foreground"
               initial={{ opacity: 0 }}
               whileInView={{ opacity: 1 }}
               viewport={{ once: true }}
@@ -646,7 +648,7 @@ const ProjectDetails = () => {
               {[...project.responsive, ...project.responsive].map((src, i) => (
                 <div
                   key={i}
-                  className="relative flex-shrink-0 w-[200px] md:w-[260px] aspect-[9/16] rounded-xl overflow-hidden group mx-3"
+                  className="resp-phone relative flex-shrink-0 w-[45vw] md:w-[260px] aspect-[9/16] rounded-xl overflow-hidden group mx-2 md:mx-3"
                 >
                   <img
                     src={src}
@@ -673,10 +675,10 @@ const ProjectDetails = () => {
             viewport={{ once: true }}
             transition={{ duration: 0.8 }}
           >
-            <h2 className="text-3xl md:text-5xl uppercase tracking-[0.2em] text-muted-foreground mb-12">
+            <h2 className="text-2xl md:text-5xl uppercase tracking-[0.2em] text-muted-foreground mb-8 md:mb-12">
               The impact
             </h2>
-            <p className="text-xl md:text-3xl lg:text-4xl leading-[1.4] font-light">
+            <p className="text-lg md:text-3xl lg:text-4xl leading-[1.4] font-light">
               {project.impact}
             </p>
           </motion.div>
@@ -687,7 +689,7 @@ const ProjectDetails = () => {
       <section className="px-6 md:px-12 lg:px-20 pt-16 md:pt-24">
         <div className="max-w-[1600px] mx-auto">
           <motion.h2
-            className="text-3xl md:text-5xl uppercase tracking-[0.2em] text-muted-foreground mb-12"
+            className="text-2xl md:text-5xl uppercase tracking-[0.2em] text-muted-foreground mb-8 md:mb-12"
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
             viewport={{ once: true }}
@@ -721,7 +723,7 @@ const ProjectDetails = () => {
       </section>
 
       {/* Next Project Interaction Area */}
-      <section className="min-h-[50vh] flex flex-col items-center justify-center relative pb-32 mt-[200px]">
+      <section className="min-h-[50vh] flex flex-col items-center justify-center relative pb-20 md:pb-32 mt-24 md:mt-[200px]">
         <div className="text-center space-y-8 z-10">
           <h3 className="text-2xl md:text-3xl font-light text-muted-foreground">
             Ready for the next mission?

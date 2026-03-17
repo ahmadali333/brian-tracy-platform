@@ -361,6 +361,16 @@
 .mq-outline { color: transparent; -webkit-text-stroke: 1.5px rgba(72, 240, 231, 0.3); }
 .mq-dot     { background: rgba(72, 240, 231, 0.25); }
 
+/* ─── Respect reduced-motion preference ──────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .star,
+  .cs-track-fwd, .cs-track-rev,
+  .mq-track-fwd, .mq-track-rev,
+  .concept-row-fwd, .concept-row-rev {
+    animation: none !important;
+  }
+}
+
 ::view-transition-old(root),
 ::view-transition-new(root) {
   animation: none;

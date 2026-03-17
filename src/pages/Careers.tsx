@@ -31,7 +31,7 @@ const Careers = () => {
         <div className="min-h-screen bg-background text-foreground overflow-x-hidden">
             {/* Hero Section */}
             <motion.section
-                className="relative min-h-screen flex items-end section-padding pb-16 md:pb-24 overflow-hidden"
+                className="relative min-h-[70vh] md:min-h-screen flex items-end section-padding pb-16 md:pb-24 overflow-hidden"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 1 }}

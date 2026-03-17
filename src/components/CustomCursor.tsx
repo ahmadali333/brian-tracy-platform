@@ -20,6 +20,9 @@ export const CustomCursor = () => {
   const trailY = useSpring(cursorY, { stiffness: 150, damping: 20 });
 
   useEffect(() => {
+    // Skip attaching listeners entirely on touch devices — saves 7 event listeners
+    if (isTouchDevice) return;
+
     let rafId = 0;
 
     const handleMouseMove = (e: MouseEvent) => {

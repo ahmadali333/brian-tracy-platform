@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect } from "react";
+import React, { createContext, useContext, useEffect, useMemo } from "react";
 
 type Theme = "dark" | "light" | "system";
 
@@ -21,8 +21,10 @@ export function ThemeProvider({ children, ..._ }: { children: React.ReactNode; d
         localStorage.removeItem("vite-ui-theme");
     }, []);
 
+    const value = useMemo(() => ({ theme: "dark" as const, setTheme: () => {} }), []);
+
     return (
-        <ThemeContext.Provider value={{ theme: "dark", setTheme: () => {} }}>
+        <ThemeContext.Provider value={value}>
             {children}
         </ThemeContext.Provider>
     );

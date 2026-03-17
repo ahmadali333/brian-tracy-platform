@@ -1,5 +1,5 @@
 import { useRef, useEffect, useState } from "react";
-import { useParams, Link, useNavigate } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import { motion, useScroll, useTransform, useSpring } from "framer-motion";
 import {
   ArrowLeft,
@@ -22,13 +22,32 @@ import { usePageMetadata } from "@/hooks/usePageMetadata";
 const getAvatarUrl = (seed: string | number) =>
   `https://api.dicebear.com/9.x/notionists/svg?seed=${encodeURIComponent(String(seed))}`;
 
+const mapBlogToDisplay = (data: any): ArticleDisplay => ({
+  ...data,
+  date: data.uploadDate,
+  image: data.blogImage,
+  tags: data.metaTags ? data.metaTags.split(',').map((t: string) => t.trim()) : [],
+  author: typeof data.author === 'string'
+    ? { name: data.author, role: 'Editor', avatar: getAvatarUrl(data.slug || data.id || data.title) }
+    : data.author || { name: 'Admin', role: 'Editor', avatar: getAvatarUrl(data.slug || data.id || data.title) }
+});
+
 const ArticleDetails = () => {
   useLenis();
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
   const [article, setArticle] = useState<ArticleDisplay | null>(null);
+  const [allArticles, setAllArticles] = useState<ArticleDisplay[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+
+  // Fetch all articles for prev/next navigation
+  useEffect(() => {
+    let cancelled = false;
+    api.blogs.getAll().then(data => {
+      if (!cancelled) setAllArticles(data.map(mapBlogToDisplay));
+    }).catch(() => {});
+    return () => { cancelled = true; };
+  }, []);
 
   useEffect(() => {
     if (!id) return;
@@ -41,15 +60,7 @@ const ArticleDetails = () => {
     fetchPromise
       .then((data) => {
         if (cancelled) return;
-        setArticle({
-          ...data,
-          date: data.uploadDate,
-          image: data.blogImage,
-          tags: data.metaTags ? data.metaTags.split(',').map((t: string) => t.trim()) : [],
-          author: typeof data.author === 'string'
-            ? { name: data.author, role: 'Editor', avatar: getAvatarUrl(data.slug || data.id || data.title) }
-            : data.author || { name: 'Admin', role: 'Editor', avatar: getAvatarUrl(data.slug || data.id || data.title) }
-        });
+        setArticle(mapBlogToDisplay(data));
         setLoading(false);
       })
       .catch((err) => {
@@ -91,9 +102,12 @@ const ArticleDetails = () => {
     );
   }
 
-  // Pass navigation props to ArticleContent
-  const prevArticle = null;
-  const nextArticle = null;
+  // Compute prev/next from all articles
+  const currentIndex = allArticles.findIndex(
+    (a) => a.slug === (article.slug || id) || String(a.id) === String(article.id || id)
+  );
+  const prevArticle = currentIndex > 0 ? allArticles[currentIndex - 1] : null;
+  const nextArticle = currentIndex >= 0 && currentIndex < allArticles.length - 1 ? allArticles[currentIndex + 1] : null;
 
   return <ArticleContent article={article} prevArticle={prevArticle} nextArticle={nextArticle} />;
 };

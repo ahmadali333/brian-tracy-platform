@@ -74,7 +74,7 @@ export const HeroSection = () => {
     return () => { window.removeEventListener("scroll", onScroll); cancelAnimationFrame(rafId); };
   }, []);
 
-  const starCount = window.innerWidth < 768 ? 20 : 40;
+  const [starCount] = useState(() => window.innerWidth < 768 ? 20 : 40);
   const stars = useMemo(() => generateStars(starCount), [starCount]);
 
   return (

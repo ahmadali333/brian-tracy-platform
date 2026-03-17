@@ -101,7 +101,7 @@ export const useScrollRotation = (targetRef: RefObject<HTMLElement>, rotationAmo
   return smoothRotate;
 };
 
-// Hook for mouse parallax effect
+// Hook for mouse parallax effect — RAF-throttled, skipped on touch devices
 export const useMouseParallax = (strength = 0.05) => {
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
@@ -111,15 +111,25 @@ export const useMouseParallax = (strength = 0.05) => {
   const y = useSpring(mouseY, springConfig);
 
   useEffect(() => {
+    const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    if (isTouch) return;
+
+    let rafId = 0;
     const handleMouseMove = (e: MouseEvent) => {
-      const centerX = window.innerWidth / 2;
-      const centerY = window.innerHeight / 2;
-      mouseX.set((e.clientX - centerX) * strength);
-      mouseY.set((e.clientY - centerY) * strength);
+      cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(() => {
+        const centerX = window.innerWidth / 2;
+        const centerY = window.innerHeight / 2;
+        mouseX.set((e.clientX - centerX) * strength);
+        mouseY.set((e.clientY - centerY) * strength);
+      });
     };
 
-    window.addEventListener("mousemove", handleMouseMove);
-    return () => window.removeEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mousemove", handleMouseMove, { passive: true });
+    return () => {
+      cancelAnimationFrame(rafId);
+      window.removeEventListener("mousemove", handleMouseMove);
+    };
   }, [mouseX, mouseY, strength]);
 
   return { x, y };
@@ -178,17 +188,21 @@ export const useScrollVelocity = () => {
   return smoothVelocity;
 };
 
-// Hook for element distance from center
+// Hook for element distance from center — RAF-throttled to avoid setState on every scroll pixel
 export const useCenterDistance = (ref: RefObject<HTMLElement>) => {
   const [distance, setDistance] = useState(0);
 
   useEffect(() => {
+    let rafId = 0;
     const updateDistance = () => {
-      if (!ref.current) return;
-      const rect = ref.current.getBoundingClientRect();
-      const elementCenter = rect.top + rect.height / 2;
-      const screenCenter = window.innerHeight / 2;
-      setDistance(Math.abs(elementCenter - screenCenter) / screenCenter);
+      cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(() => {
+        if (!ref.current) return;
+        const rect = ref.current.getBoundingClientRect();
+        const elementCenter = rect.top + rect.height / 2;
+        const screenCenter = window.innerHeight / 2;
+        setDistance(Math.abs(elementCenter - screenCenter) / screenCenter);
+      });
     };
 
     window.addEventListener("scroll", updateDistance, { passive: true });
@@ -196,6 +210,7 @@ export const useCenterDistance = (ref: RefObject<HTMLElement>) => {
     updateDistance();
 
     return () => {
+      cancelAnimationFrame(rafId);
       window.removeEventListener("scroll", updateDistance);
       window.removeEventListener("resize", updateDistance);
     };

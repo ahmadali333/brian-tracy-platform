@@ -15,14 +15,16 @@ export const LoadingScreen = ({
 
   useEffect(() => {
     if (!show) return;
+    let rafId = 0;
     const duration = 900;
     const start = performance.now();
     const tick = () => {
       const p = Math.min(1, (performance.now() - start) / duration);
       setProgress(1 - Math.pow(1 - p, 3));
-      if (p < 1) requestAnimationFrame(tick);
+      if (p < 1) rafId = requestAnimationFrame(tick);
     };
-    requestAnimationFrame(tick);
+    rafId = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(rafId);
   }, [show]);
 
   useEffect(() => {

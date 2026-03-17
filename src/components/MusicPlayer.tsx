@@ -43,6 +43,7 @@ export const MusicPlayer = () => {
             window.removeEventListener("music:resume", handleResume);
             if (audioRef.current) {
                 audioRef.current.pause();
+                audioRef.current.src = ""; // Release audio resource from memory
                 audioRef.current = null;
             }
         };

@@ -53,6 +53,8 @@ const FrameDriver: React.FC = () => {
     return null;
 };
 
+const isMobileGlobe = typeof window !== 'undefined' && window.innerWidth < 768;
+
 const HeroGlobeScene: React.FC = () => {
     const scrollProxy = useRef({
         scale: 1,
@@ -99,11 +101,11 @@ const HeroGlobeScene: React.FC = () => {
             <ambientLight intensity={0.10} />
             <directionalLight position={[6, 2, 2]} intensity={2.2} color="#fff5e8" />
 
-            {/* Dense starfield */}
+            {/* Dense starfield — reduced on mobile to prevent GPU bottleneck */}
             <Stars
                 radius={80}
                 depth={60}
-                count={6000}
+                count={isMobileGlobe ? 1500 : 6000}
                 factor={5}
                 saturation={0}
                 fade
@@ -113,7 +115,7 @@ const HeroGlobeScene: React.FC = () => {
             <Stars
                 radius={150}
                 depth={100}
-                count={5000}
+                count={isMobileGlobe ? 1200 : 5000}
                 factor={3}
                 saturation={0}
                 fade
@@ -123,7 +125,7 @@ const HeroGlobeScene: React.FC = () => {
             <Stars
                 radius={250}
                 depth={150}
-                count={4000}
+                count={isMobileGlobe ? 800 : 4000}
                 factor={1.5}
                 saturation={0.1}
                 fade

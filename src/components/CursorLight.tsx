@@ -45,7 +45,7 @@ export const CursorLight = () => {
     <div
       ref={ref}
       className="cursor-light"
-      style={{ opacity: 0 }}
+      style={{ opacity: 0, willChange: "transform, opacity", contain: "layout style" }}
     />
   );
 };

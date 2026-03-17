@@ -510,10 +510,9 @@ export const NavbarMenuIcon = () => {
                     </p>
                     <div className="flex items-center gap-4">
                       {[
-                        { name: "TikTok", url: SOCIAL_LINKS.tiktok },
-                        { name: "Instagram", url: SOCIAL_LINKS.instagram },
-                        { name: "X", url: SOCIAL_LINKS.twitter },
                         { name: "LinkedIn", url: SOCIAL_LINKS.linkedin },
+                        { name: "Instagram", url: SOCIAL_LINKS.instagram },
+                        { name: "Facebook", url: SOCIAL_LINKS.facebook },
                       ].map((social) => (
                         <a
                           key={social.name}

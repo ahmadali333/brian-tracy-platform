@@ -48,14 +48,7 @@ export const TestimonialsSection = () => {
   const isInView = useInView(containerRef, { once: true, margin: "-10%" });
   const [current, setCurrent] = useState(0);
   const [direction, setDirection] = useState(0);
-  const [statsCycle, setStatsCycle] = useState(0);
-
-  // Re-trigger stats animation every 15 seconds
-  useEffect(() => {
-    if (!isInView) return;
-    const timer = setInterval(() => setStatsCycle((c) => c + 1), 15000);
-    return () => clearInterval(timer);
-  }, [isInView]);
+  const statsCycle = 0; // Removed 15s re-trigger — was causing cascading re-renders & animation jank
 
 
   const next = () => {

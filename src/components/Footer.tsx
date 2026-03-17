@@ -1,9 +1,8 @@
 import { motion } from "framer-motion";
 import {
-  Twitter,
   Instagram,
   Linkedin,
-  Dribbble,
+  Facebook,
   ArrowUpRight,
 } from "lucide-react";
 import { Magnetic, LineReveal } from "./AnimationComponents";
@@ -19,9 +18,9 @@ const footerLinks = {
     { name: "Careers", href: "/careers" },
     { name: "Contact", href: "/contact" }],
   social: [
-    { icon: Twitter, href: SOCIAL_LINKS.twitter, label: "Twitter" },
-    { icon: Instagram, href: SOCIAL_LINKS.instagram, label: "Instagram" },
     { icon: Linkedin, href: SOCIAL_LINKS.linkedin, label: "LinkedIn" },
+    { icon: Instagram, href: SOCIAL_LINKS.instagram, label: "Instagram" },
+    { icon: Facebook, href: SOCIAL_LINKS.facebook, label: "Facebook" },
   ],
 };
 
