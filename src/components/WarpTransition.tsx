@@ -143,7 +143,7 @@ const CanvasLogic = ({ mode, chargeProgress, canvasRef }: { mode: WarpMode, char
             cancelAnimationFrame(frameId);
             window.removeEventListener('resize', handleResize);
         };
-    }, []); // Only run once on mount, refs handle updates
+    }, [canvasRef]);
 
     return <canvas ref={canvasRef} className="fixed inset-0 z-50 pointer-events-none" />;
 };

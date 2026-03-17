@@ -47,7 +47,7 @@ export const FAQSection = () => {
       <div className="max-w-[1800px] mx-auto">
         {/* Header */}
         <motion.div
-          className="flex items-center gap-4 mb-20"
+          className="flex items-center gap-4 mb-12"
           initial={{ opacity: 0, y: 30 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 1, ease: [0.25, 0.1, 0.25, 1] }}
@@ -72,7 +72,7 @@ export const FAQSection = () => {
           >
             <div className="overflow-hidden mb-8">
               <motion.h2
-                className="text-5xl md:text-6xl lg:text-7xl font-bold leading-[0.95]"
+                className="text-4xl md:text-5xl lg:text-6xl font-bold leading-[0.95]"
                 initial={{ y: "100%" }}
                 animate={isInView ? { y: 0 } : {}}
                 transition={{ duration: 1, delay: 0.3 }}
@@ -95,19 +95,20 @@ export const FAQSection = () => {
                   e.preventDefault();
                   navigate("/contact");
                 }}
-                className="inline-flex items-center gap-3 px-8 py-4 border border-border rounded-full overflow-hidden relative group"
+                className="inline-flex items-center gap-3 px-8 py-4 rounded-full text-white overflow-hidden relative group"
+                style={{ background: "linear-gradient(135deg, #126b66, #00d4aa)" }}
+                data-cursor="Ask"
                 initial={{ opacity: 0, y: 20 }}
                 animate={isInView ? { opacity: 1, y: 0 } : {}}
-                transition={{ delay: 0.6 }}
-                whileHover={{ scale: 1.02 }}
+                transition={{
+                  opacity: { delay: 0.6 },
+                  y: { delay: 0.6 },
+                  scale: { duration: 0.2, delay: 0 },
+                  boxShadow: { duration: 0.2, delay: 0 },
+                }}
+                whileHover={{ scale: 1.03, boxShadow: "0 0 20px rgba(72, 240, 231, 0.5), 0 0 40px rgba(72, 240, 231, 0.25), 0 0 60px rgba(72, 240, 231, 0.1)" }}
                 whileTap={{ scale: 0.98 }}
               >
-                <motion.span
-                  className="absolute inset-0 bg-foreground"
-                  initial={{ x: "-100%" }}
-                  whileHover={{ x: 0 }}
-                  transition={{ duration: 0.4 }}
-                />
                 <span className="relative z-10 font-medium">
                   Ask your Question
                 </span>
@@ -134,13 +135,10 @@ export const FAQSection = () => {
                 initial={{ opacity: 0, y: 30 }}
                 animate={isInView ? { opacity: 1, y: 0 } : {}}
                 transition={{ delay: 0.4 + index * 0.1 }}
-                onMouseEnter={() => setOpenIndex(index)}
-                onMouseLeave={() => setOpenIndex(null)}
+                onClick={() => setOpenIndex(openIndex === index ? null : index)}
               >
-                <motion.button
+                <button
                   className="w-full flex items-center justify-between py-8 text-left group"
-                  whileHover={{ x: 10 }}
-                  transition={{ duration: 0.3 }}
                 >
                   <span className="font-medium text-lg md:text-xl pr-8 group-hover:text-foreground transition-colors">
                     {faq.question}
@@ -166,7 +164,7 @@ export const FAQSection = () => {
                       <Plus size={16} />
                     )}
                   </motion.div>
-                </motion.button>
+                </button>
                 <AnimatePresence>
                   {openIndex === index && (
                     <motion.div
@@ -177,7 +175,7 @@ export const FAQSection = () => {
                       className="overflow-hidden"
                     >
                       <motion.p
-                        className="text-muted-foreground pb-8 pr-16 leading-relaxed"
+                        className="text-muted-foreground pb-8 pr-4 md:pr-16 leading-relaxed"
                         initial={{ y: -20 }}
                         animate={{ y: 0 }}
                         transition={{ duration: 0.3, delay: 0.1 }}

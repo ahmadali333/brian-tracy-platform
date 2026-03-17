@@ -3,227 +3,105 @@ import { useEffect, useState } from "react";
 
 interface LoadingScreenProps {
   isLoading: boolean;
-  progress?: number;
   onLoadingComplete?: () => void;
 }
 
 export const LoadingScreen = ({
   isLoading,
-  progress = 0,
   onLoadingComplete,
 }: LoadingScreenProps) => {
-  const [displayLoading, setDisplayLoading] = useState(isLoading);
+  const [show, setShow] = useState(isLoading);
+  const [progress, setProgress] = useState(0);
 
   useEffect(() => {
-    if (isLoading) {
-      setDisplayLoading(true);
-    } else if (!isLoading && displayLoading) {
-      // Delay before removing to show exit animation
-      const timer = setTimeout(() => {
-        setDisplayLoading(false);
+    if (!show) return;
+    const duration = 900;
+    const start = performance.now();
+    const tick = () => {
+      const p = Math.min(1, (performance.now() - start) / duration);
+      setProgress(1 - Math.pow(1 - p, 3));
+      if (p < 1) requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  }, [show]);
+
+  useEffect(() => {
+    if (!isLoading && show) {
+      const t = setTimeout(() => {
+        setShow(false);
         onLoadingComplete?.();
-      }, 600);
-      return () => clearTimeout(timer);
+      }, 300);
+      return () => clearTimeout(t);
     }
-  }, [isLoading, displayLoading, onLoadingComplete]);
+  }, [isLoading, show, onLoadingComplete]);
+
+  const pct = Math.round(progress * 100);
 
   return (
     <AnimatePresence>
-      {displayLoading && (
+      {show && (
         <motion.div
-          className="fixed inset-0 z-[9999] bg-background flex items-center justify-center overflow-hidden"
+          className="fixed inset-0 z-[9999] flex flex-col items-center justify-center"
+          style={{ background: "#000" }}
           initial={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.6, ease: [0.25, 0.1, 0.25, 1] }}
+          exit={{ y: "-100%" }}
+          transition={{ duration: 0.5, ease: [0.76, 0, 0.24, 1] }}
         >
-          {/* Animated background gradient blobs */}
-          <div className="absolute inset-0 overflow-hidden">
+          {/* Logo + text */}
+          <div className="flex flex-col items-center gap-6">
+            {/* Logo with glow pulse */}
             <motion.div
-              className="absolute top-0 right-0 w-96 h-96 bg-foreground/5 rounded-full blur-3xl"
-              animate={{
-                x: [0, 50, 0],
-                y: [0, -50, 0],
-              }}
-              transition={{
-                duration: 8,
-                repeat: Infinity,
-                ease: "easeInOut",
-              }}
-            />
-            <motion.div
-              className="absolute bottom-0 left-0 w-96 h-96 bg-foreground/5 rounded-full blur-3xl"
-              animate={{
-                x: [0, -50, 0],
-                y: [0, 50, 0],
-              }}
-              transition={{
-                duration: 10,
-                repeat: Infinity,
-                ease: "easeInOut",
-              }}
-            />
-            <motion.div
-              className="absolute top-1/2 left-1/2 w-80 h-80 bg-foreground/3 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2"
-              animate={{
-                scale: [0.8, 1.2, 0.8],
-                opacity: [0.3, 0.6, 0.3],
-              }}
-              transition={{
-                duration: 6,
-                repeat: Infinity,
-                ease: "easeInOut",
-              }}
-            />
+              className="relative"
+              initial={{ opacity: 0, scale: 0.7 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.6, ease: [0.25, 0.1, 0.25, 1] }}
+            >
+              <motion.div
+                className="absolute inset-0 rounded-full blur-[40px]"
+                style={{ background: "rgba(0, 212, 170, 0.15)" }}
+                animate={{ opacity: [0.3, 0.6, 0.3], scale: [0.8, 1.1, 0.8] }}
+                transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+              />
+              <img
+                src="/logo-white.png"
+                alt=""
+                width={80}
+                height={80}
+                className="relative z-10"
+              />
+            </motion.div>
+
+            {/* Brand name */}
+            <h1 className="text-white text-3xl md:text-4xl font-bold tracking-tight">
+              forrof
+            </h1>
           </div>
 
-          {/* Main loading content */}
-          <motion.div
-            className="relative z-10 flex flex-col items-center justify-center gap-12"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.6 }}
-          >
-            {/* Animated logo/brand */}
-            <motion.div
-              className="flex flex-col items-center gap-6"
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ duration: 0.8, delay: 0.2 }}
-            >
+          {/* Bottom section */}
+          <div className="absolute bottom-0 left-0 right-0 px-8 pb-8 space-y-5">
+            {/* Text + percentage */}
+            <div className="flex items-end justify-between">
+              <p className="text-white/40 text-sm font-light tracking-wide">
+                Building Intelligent Software for the AI Era
+              </p>
+              <span className="text-white/80 text-xl md:text-2xl font-semibold tabular-nums">
+                {pct}%
+              </span>
+            </div>
+
+            {/* Progress line */}
+            <div className="w-full h-[2px] bg-white/10 rounded-full overflow-hidden">
               <motion.div
-                className="text-5xl md:text-6xl font-bold tracking-tight"
-                animate={{
-                  scale: [1, 1.05, 1],
+                className="h-full rounded-full"
+                style={{
+                  background: "linear-gradient(90deg, #00d4aa, #48f0e7)",
                 }}
-                transition={{
-                  duration: 2,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                }}
-              >
-                <div className="flex  items-center">
-                  <img src="/logo.png" alt="" width={48} height={48} loading="lazy" className="dark:hidden" />
-                  <img src="/logo-white.png" alt="" width={48} height={48} loading="lazy" className="hidden dark:block" />
-                  <span className="inline-block">
-                    &nbsp;forrof
-                  </span>
-                </div>
-              </motion.div>
-
-              {/* Animated dot pulse */}
-              <div className="flex gap-2 h-2">
-                {[0, 1, 2].map((i) => (
-                  <motion.div
-                    key={i}
-                    className="w-2 h-2 rounded-full bg-foreground"
-                    animate={{
-                      scale: [1, 1.5, 1],
-                      opacity: [0.5, 1, 0.5],
-                    }}
-                    transition={{
-                      duration: 1.5,
-                      repeat: Infinity,
-                      delay: i * 0.2,
-                      ease: "easeInOut",
-                    }}
-                  />
-                ))}
-              </div>
-            </motion.div>
-
-            {/* Loading text with reveal animation */}
-            <motion.div
-              className="text-center"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.8, delay: 0.4 }}
-            >
-              <motion.p
-                className="text-sm text-muted-foreground uppercase tracking-widest"
-                animate={{
-                  opacity: [0.5, 1, 0.5],
-                }}
-                transition={{
-                  duration: 2,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                }}
-              >
-                Develop to Scale, Designed to Lead
-              </motion.p>
-            </motion.div>
-
-            {/* Dynamic progress bar */}
-            <motion.div
-              className="w-64 h-1 bg-foreground/10 rounded-full overflow-hidden"
-              initial={{ opacity: 0, width: 0 }}
-              animate={{ opacity: 1, width: 256 }}
-              transition={{ duration: 0.8, delay: 0.3 }}
-            >
-              <motion.div
-                className="h-full bg-gradient-to-r from-foreground/50 via-foreground to-foreground/50 rounded-full origin-left"
-                initial={{ scaleX: 0 }}
-                animate={{ scaleX: progress / 100 }}
-                transition={{ duration: 0.4, ease: "easeOut" }}
+                initial={{ width: "0%" }}
+                animate={{ width: "100%" }}
+                transition={{ duration: 0.4, ease: [0.25, 0.1, 0.25, 1] }}
               />
-            </motion.div>
-
-            {/* Floating particles background */}
-            {[...Array(8)].map((_, i) => (
-              <motion.div
-                key={`particle-${i}`}
-                className="absolute w-1 h-1 bg-foreground/20 rounded-full"
-                initial={{
-                  x: Math.random() * 400 - 200,
-                  y: Math.random() * 400 - 200,
-                  opacity: 0,
-                }}
-                animate={{
-                  x: Math.random() * 800 - 400,
-                  y: Math.random() * 800 - 400,
-                  opacity: [0, 0.5, 0],
-                }}
-                transition={{
-                  duration: 3 + Math.random() * 2,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                }}
-              />
-            ))}
-
-            {/* Rotating orbit rings */}
-            <motion.div
-              className="absolute w-48 h-48 border border-foreground/10 rounded-full"
-              animate={{ rotate: 360 }}
-              transition={{
-                duration: 8,
-                repeat: Infinity,
-                ease: [0.25, 0.46, 0.45, 0.94],
-              }}
-            />
-            <motion.div
-              className="absolute w-72 h-72 border border-foreground/5 rounded-full"
-              animate={{ rotate: -360 }}
-              transition={{
-                duration: 12,
-                repeat: Infinity,
-                ease: [0.25, 0.46, 0.45, 0.94],
-              }}
-            />
-          </motion.div>
-
-          {/* Loading percentage */}
-          <motion.div
-            className="absolute bottom-16 text-center"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.8, delay: 0.6 }}
-          >
-            <span className="text-xs text-muted-foreground tabular-nums">
-              {progress}% — Loading assets
-            </span>
-          </motion.div>
+            </div>
+          </div>
         </motion.div>
       )}
     </AnimatePresence>

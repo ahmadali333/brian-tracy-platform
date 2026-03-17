@@ -1,0 +1,431 @@
+import { motion, useInView } from "framer-motion";
+import { useRef } from "react";
+import { ArrowUpRight } from "lucide-react";
+import { LineReveal, Magnetic } from "@/components/AnimationComponents";
+import { usePageMetadata } from "@/hooks/usePageMetadata";
+import { useNavigate } from "react-router-dom";
+
+const teamTypes = [
+  { num: "01", title: "Enterprise Innovation Labs", desc: "Test ideas fast, launch pilots, and validate new digital products without disrupting core operations." },
+  { num: "02", title: "CIO / CTO Offices", desc: "Engineering expertise and predictable delivery for technology leaders managing complex transformation agendas." },
+  { num: "03", title: "Corporate Digital Ventures", desc: "From concept to MVP and scaling — we operate as your external venture studio with enterprise-grade discipline." },
+  { num: "04", title: "Regional Divisions and R&D Departments", desc: "Launch local initiatives with global standards — strategy, design, and development under one roof." },
+  { num: "05", title: "Enterprise AI / Automation Initiatives", desc: "Quick ROI, production-ready AI pilots that move from whiteboard to working system in weeks, not quarters." },
+];
+
+const challenges = [
+  {
+    num: "01",
+    challenge: "Slow digital transformation cycles",
+    approach: "Agile product teams operating in short sprints — shipping value every two weeks, not every two years.",
+  },
+  {
+    num: "02",
+    challenge: "Legacy and fragmented systems",
+    approach: "Modernize module by module with a strangler-fig approach that keeps the business running during transition.",
+  },
+  {
+    num: "03",
+    challenge: "High vendor costs and opaque pricing",
+    approach: "Lean, senior-led teams and transparent pricing models — you know exactly what you're paying for and why.",
+  },
+  {
+    num: "04",
+    challenge: "Bureaucracy and slow approvals",
+    approach: "Dedicated pilot programs with clear success metrics that create internal momentum and executive buy-in.",
+  },
+  {
+    num: "05",
+    challenge: "Unclear AI strategy",
+    approach: "Rapid AI prototyping and hands-on advisory support to identify high-value use cases and build confidence.",
+  },
+];
+
+const processSteps = [
+  { num: "01", title: "Strategic Alignment", desc: "Workshops with senior stakeholders to align on business outcomes, constraints, and success metrics before any work begins." },
+  { num: "02", title: "Architecture & Technology Audit", desc: "Assessment of existing systems, infrastructure, and technical debt to design a forward-looking architecture." },
+  { num: "03", title: "Co-Creation & Design", desc: "Product design and solution architecture developed collaboratively with your team to ensure full organizational buy-in." },
+  { num: "04", title: "Development & Integration", desc: "Sprint-based delivery with integration into existing enterprise systems, data pipelines, and security frameworks." },
+  { num: "05", title: "Optimization & Continuous Improvement", desc: "Post-launch performance monitoring, KPI reporting, and ongoing iteration to maximize business impact." },
+];
+
+const engagementModels = [
+  {
+    num: "01",
+    title: "Innovation Pilot",
+    desc: "Test a hypothesis quickly with a time-boxed, budget-fixed pilot — de-risk the investment before committing to full scale.",
+  },
+  {
+    num: "02",
+    title: "Strategic Partnership",
+    desc: "An ongoing innovation roadmap with a dedicated team that learns your business and drives continuous improvement.",
+  },
+  {
+    num: "03",
+    title: "Augmented Enterprise Teams",
+    desc: "Add senior specialists — engineers, designers, AI architects — who integrate with your existing teams and processes.",
+  },
+  {
+    num: "04",
+    title: "End-to-End Product Delivery",
+    desc: "Full ownership of a product from design through deployment — we operate as your external product studio.",
+  },
+];
+
+const reasons = [
+  { title: "Deep Expertise in AI and Digital Innovation", desc: "Proven track record delivering AI solutions, digital platforms, and automation systems across complex enterprise environments." },
+  { title: "Enterprise-Level Delivery", desc: "SOC 2-ready processes, senior engineers, and delivery standards that meet enterprise procurement and security requirements." },
+  { title: "Transparent Communication and Agile Approach", desc: "Weekly demos, honest status reporting, and sprint retrospectives — no surprises, just consistent progress." },
+  { title: "Focus on Measurable Business Results", desc: "Every engagement is tied to specific KPIs. We optimize for your outcomes, not deliverable counts." },
+];
+
+export default function EnterpriseService() {
+  usePageMetadata({
+    title: "Enterprise Software & IT Services | Forrof",
+    description: "IT technology partner for enterprise innovation. Move faster, innovate smarter, and scale with confidence — from rapid pilots to production-grade platforms.",
+    keywords: "enterprise software, IT consulting, digital transformation, enterprise AI, innovation lab, CTO services, enterprise development",
+  });
+
+  const navigate = useNavigate();
+
+  const heroRef = useRef(null);
+  const sec1Ref = useRef(null);
+  const sec2Ref = useRef(null);
+  const sec3Ref = useRef(null);
+  const sec4Ref = useRef(null);
+  const sec5Ref = useRef(null);
+  const ctaRef = useRef(null);
+
+  const sec1InView = useInView(sec1Ref, { once: true, margin: "-100px" });
+  const sec2InView = useInView(sec2Ref, { once: true, margin: "-100px" });
+  const sec3InView = useInView(sec3Ref, { once: true, margin: "-100px" });
+  const sec4InView = useInView(sec4Ref, { once: true, margin: "-100px" });
+  const sec5InView = useInView(sec5Ref, { once: true, margin: "-100px" });
+  const ctaInView = useInView(ctaRef, { once: true, margin: "-100px" });
+
+  return (
+    <div className="min-h-screen bg-background text-foreground overflow-x-hidden">
+
+      {/* HERO */}
+      <motion.section
+        ref={heroRef}
+        className="relative min-h-screen flex items-end section-padding pb-16 md:pb-24 overflow-hidden"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 1 }}
+      >
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          <motion.div
+            className="absolute top-[calc(50%-350px)] right-0 w-[700px] h-[700px] rounded-full blur-[130px]"
+            style={{ background: "rgba(0, 212, 170, 0.08)" }}
+            animate={{ x: [0, -60, 20, -40, 0], y: [0, 60, -40, 30, 0], opacity: [0.6, 1, 0.4, 0.9, 0.6] }}
+            transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
+          />
+        </div>
+        <div className="absolute inset-0 bg-gradient-to-b from-background via-background/40 to-background z-10" />
+        <div className="relative z-20 max-w-[1800px] mx-auto w-full">
+          <motion.span
+            className="inline-block text-xs uppercase tracking-[0.3em] mb-8"
+            style={{ color: "#00d4aa" }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+          >
+            Services / Enterprise
+          </motion.span>
+          <div className="overflow-hidden mb-6">
+            <motion.h1
+              className="text-[13vw] md:text-[10vw] font-bold leading-[0.88] tracking-tighter"
+              style={{
+                background: "linear-gradient(135deg, #ffffff 0%, #48f0e7 30%, #00d4aa 60%, #126b66 100%)",
+                WebkitBackgroundClip: "text",
+                backgroundClip: "text",
+                color: "transparent",
+                backgroundSize: "200% 200%",
+              }}
+              initial={{ y: "110%", backgroundPosition: "0% 50%" }}
+              animate={{ y: 0, backgroundPosition: "100% 50%" }}
+              transition={{
+                y: { duration: 1.2, ease: [0.25, 0.1, 0.25, 1], delay: 0.2 },
+                backgroundPosition: { duration: 3, ease: "easeInOut", delay: 1, repeat: Infinity, repeatType: "reverse" },
+              }}
+            >
+              Enterprise Software
+            </motion.h1>
+          </div>
+          <motion.p
+            className="text-lg md:text-2xl max-w-2xl leading-relaxed mt-10"
+            style={{ color: "#48f0e7" }}
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.6 }}
+          >
+            IT Technology Partner for Enterprise Innovation. Move Faster. Innovate Smarter. Scale with Confidence. From rapid pilots to production-grade platforms, we deliver speed, expertise, and predictable execution.
+          </motion.p>
+        </div>
+      </motion.section>
+
+      {/* SECTION 1 — Who We Serve */}
+      <section ref={sec1Ref} className="section-forced-light section-padding py-32">
+        <div className="max-w-[1800px] mx-auto">
+          <motion.div
+            className="flex items-center gap-4 mb-20"
+            initial={{ opacity: 0, y: 20 }}
+            animate={sec1InView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.8 }}
+          >
+            <span className="number-label">/01</span>
+            <LineReveal className="h-px bg-border flex-1" delay={0.3} />
+            <span className="text-xs text-muted-foreground uppercase tracking-widest">Who We Serve</span>
+          </motion.div>
+
+          <motion.h2
+            className="text-4xl md:text-6xl font-bold tracking-tighter mb-16 max-w-4xl"
+            initial={{ opacity: 0, y: 40 }}
+            animate={sec1InView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.8, delay: 0.1 }}
+          >
+            Fresh, Flexible IT Services for Enterprise Teams
+          </motion.h2>
+
+          <div className="space-y-4">
+            {teamTypes.map((item, i) => (
+              <motion.div
+                key={i}
+                className="p-6 md:p-8 rounded-2xl bg-card border border-border/40 hover:border-accent/40 transition-all duration-300 flex items-start gap-8"
+                initial={{ opacity: 0, y: 40 }}
+                animate={sec1InView ? { opacity: 1, y: 0 } : {}}
+                transition={{ duration: 0.8, delay: i * 0.08 }}
+              >
+                <span className="text-xs text-muted-foreground font-medium tracking-widest uppercase flex-shrink-0 mt-1">
+                  /{item.num}
+                </span>
+                <div>
+                  <h3 className="text-lg font-semibold mb-2">{item.title}</h3>
+                  <p className="text-muted-foreground leading-relaxed text-sm">{item.desc}</p>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* SECTION 2 — Challenges */}
+      <section ref={sec2Ref} className="section-forced-dark section-padding py-32">
+        <div className="max-w-[1800px] mx-auto">
+          <motion.div
+            className="flex items-center gap-4 mb-20"
+            initial={{ opacity: 0, y: 20 }}
+            animate={sec2InView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.8 }}
+          >
+            <span className="number-label">/02</span>
+            <LineReveal className="h-px bg-border flex-1" delay={0.3} />
+            <span className="text-xs text-muted-foreground uppercase tracking-widest">Challenges</span>
+          </motion.div>
+
+          <motion.h2
+            className="text-4xl md:text-6xl font-bold tracking-tighter mb-16 max-w-4xl"
+            initial={{ opacity: 0, y: 40 }}
+            animate={sec2InView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.8, delay: 0.1 }}
+          >
+            Challenges We Help Enterprise Teams Overcome
+          </motion.h2>
+
+          <div className="space-y-6">
+            {challenges.map((item, i) => (
+              <motion.div
+                key={i}
+                className="grid md:grid-cols-2 gap-8 p-6 md:p-8 rounded-2xl bg-card border border-border/40 hover:border-accent/40 transition-all duration-300"
+                initial={{ opacity: 0, y: 40 }}
+                animate={sec2InView ? { opacity: 1, y: 0 } : {}}
+                transition={{ duration: 0.8, delay: i * 0.1 }}
+              >
+                <div className="flex items-start gap-6">
+                  <span className="text-xs text-muted-foreground font-medium tracking-widest uppercase flex-shrink-0 mt-1">
+                    {item.num}
+                  </span>
+                  <div>
+                    <p className="text-sm uppercase tracking-widest text-muted-foreground mb-2">Challenge</p>
+                    <h3 className="text-lg font-semibold">{item.challenge}</h3>
+                  </div>
+                </div>
+                <div>
+                  <p className="text-sm uppercase tracking-widest text-muted-foreground mb-2">Our Approach</p>
+                  <p className="text-muted-foreground leading-relaxed">{item.approach}</p>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* SECTION 3 — How We Work */}
+      <section ref={sec3Ref} className="section-forced-light section-padding py-32">
+        <div className="max-w-[1800px] mx-auto">
+          <motion.div
+            className="flex items-center gap-4 mb-20"
+            initial={{ opacity: 0, y: 20 }}
+            animate={sec3InView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.8 }}
+          >
+            <span className="number-label">/03</span>
+            <LineReveal className="h-px bg-border flex-1" delay={0.3} />
+            <span className="text-xs text-muted-foreground uppercase tracking-widest">Process</span>
+          </motion.div>
+
+          <motion.h2
+            className="text-4xl md:text-6xl font-bold tracking-tighter mb-16 max-w-4xl"
+            initial={{ opacity: 0, y: 40 }}
+            animate={sec3InView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.8, delay: 0.1 }}
+          >
+            How We Work with Enterprise Clients
+          </motion.h2>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {processSteps.map((step, i) => (
+              <motion.div
+                key={i}
+                className="pt-8 border-t border-border"
+                initial={{ opacity: 0, y: 40 }}
+                animate={sec3InView ? { opacity: 1, y: 0 } : {}}
+                transition={{ duration: 0.8, delay: i * 0.1 }}
+              >
+                <span className="text-xs text-muted-foreground font-medium tracking-widest uppercase block mb-4">
+                  {step.num}
+                </span>
+                <h3 className="text-xl font-semibold mb-3">{step.title}</h3>
+                <p className="text-muted-foreground leading-relaxed text-sm">{step.desc}</p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* SECTION 4 — Engagement Models */}
+      <section ref={sec4Ref} className="section-forced-dark section-padding py-32">
+        <div className="max-w-[1800px] mx-auto">
+          <motion.div
+            className="flex items-center gap-4 mb-20"
+            initial={{ opacity: 0, y: 20 }}
+            animate={sec4InView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.8 }}
+          >
+            <span className="number-label">/04</span>
+            <LineReveal className="h-px bg-border flex-1" delay={0.3} />
+            <span className="text-xs text-muted-foreground uppercase tracking-widest">Engagement Models</span>
+          </motion.div>
+
+          <motion.h2
+            className="text-4xl md:text-6xl font-bold tracking-tighter mb-16 max-w-4xl"
+            initial={{ opacity: 0, y: 40 }}
+            animate={sec4InView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.8, delay: 0.1 }}
+          >
+            Flexible Enterprise IT Services
+          </motion.h2>
+
+          <div className="grid md:grid-cols-2 gap-6">
+            {engagementModels.map((model, i) => (
+              <motion.div
+                key={i}
+                className="p-6 md:p-8 rounded-2xl bg-card border border-border/40 hover:border-accent/40 transition-all duration-300 group"
+                initial={{ opacity: 0, y: 40 }}
+                animate={sec4InView ? { opacity: 1, y: 0 } : {}}
+                transition={{ duration: 0.8, delay: i * 0.1 }}
+              >
+                <span className="text-xs text-muted-foreground font-medium tracking-widest uppercase block mb-5">
+                  /{model.num}
+                </span>
+                <h3 className="text-2xl font-bold mb-4 group-hover:text-foreground transition-colors">
+                  {model.title}
+                </h3>
+                <p className="text-muted-foreground leading-relaxed">{model.desc}</p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* SECTION 5 — Why Partner with Us */}
+      <section ref={sec5Ref} className="section-forced-light section-padding py-32">
+        <div className="max-w-[1800px] mx-auto">
+          <motion.div
+            className="flex items-center gap-4 mb-20"
+            initial={{ opacity: 0, y: 20 }}
+            animate={sec5InView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.8 }}
+          >
+            <span className="number-label">/05</span>
+            <LineReveal className="h-px bg-border flex-1" delay={0.3} />
+            <span className="text-xs text-muted-foreground uppercase tracking-widest">Why Us</span>
+          </motion.div>
+
+          <motion.h2
+            className="text-4xl md:text-6xl font-bold tracking-tighter mb-16 max-w-4xl"
+            initial={{ opacity: 0, y: 40 }}
+            animate={sec5InView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.8, delay: 0.1 }}
+          >
+            Why Enterprises Partner with Forrof
+          </motion.h2>
+
+          <div className="grid md:grid-cols-2 gap-8">
+            {reasons.map((item, i) => (
+              <motion.div
+                key={i}
+                className="p-6 md:p-10 rounded-2xl bg-card border border-border/40 hover:border-accent/40 transition-all duration-300"
+                initial={{ opacity: 0, y: 40 }}
+                animate={sec5InView ? { opacity: 1, y: 0 } : {}}
+                transition={{ duration: 0.8, delay: i * 0.1 }}
+              >
+                <h3 className="text-xl font-semibold mb-4">{item.title}</h3>
+                <p className="text-muted-foreground leading-relaxed">{item.desc}</p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* CTA */}
+      <section ref={ctaRef} className="section-forced-dark section-padding py-40">
+        <div className="max-w-[1800px] mx-auto text-center">
+          <motion.h2
+            className="text-4xl md:text-7xl font-bold tracking-tighter mb-6"
+            initial={{ opacity: 0, y: 40 }}
+            animate={ctaInView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.8 }}
+          >
+            Let's accelerate enterprise innovation together.
+          </motion.h2>
+          <motion.p
+            className="text-muted-foreground text-lg mb-12 max-w-xl mx-auto"
+            initial={{ opacity: 0, y: 40 }}
+            animate={ctaInView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.8, delay: 0.1 }}
+          >
+            Tell us about your initiative. We'll respond within one business day with a tailored approach.
+          </motion.p>
+          <motion.div
+            initial={{ opacity: 0, y: 40 }}
+            animate={ctaInView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.8, delay: 0.2 }}
+          >
+            <Magnetic>
+              <button
+                onClick={() => navigate("/contact")}
+                className="inline-flex items-center gap-3 px-8 py-5 bg-foreground text-background rounded-full font-medium hover:opacity-80 transition-opacity"
+              >
+                Book a Strategy Session
+                <ArrowUpRight size={18} />
+              </button>
+            </Magnetic>
+          </motion.div>
+        </div>
+      </section>
+
+    </div>
+  );
+}

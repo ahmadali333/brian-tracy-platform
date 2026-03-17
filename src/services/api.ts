@@ -1,8 +1,10 @@
+import type { Job, BlogPost, JobApplication, LoginCredentials } from "@/types/api";
+
 const API_BASE = import.meta.env.VITE_API_BASE;
 
 export const api = {
     auth: {
-        login: async (credentials: any) => {
+        login: async (credentials: LoginCredentials) => {
             const res = await fetch(`${API_BASE}/login`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -14,12 +16,12 @@ export const api = {
     },
 
     jobs: {
-        getAll: async () => {
+        getAll: async (): Promise<Job[]> => {
             const res = await fetch(`${API_BASE}/jobs`);
             if (!res.ok) throw new Error('Failed to fetch jobs');
             return res.json();
         },
-        create: async (data: any) => {
+        create: async (data: Omit<Job, 'id' | 'createdAt'>) => {
             const res = await fetch(`${API_BASE}/jobs`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -28,7 +30,7 @@ export const api = {
             if (!res.ok) throw new Error('Failed to create job');
             return res.json();
         },
-        update: async (data: any) => {
+        update: async (data: Partial<Job> & { id: number }) => {
             const res = await fetch(`${API_BASE}/jobs/${data.id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
@@ -37,7 +39,7 @@ export const api = {
             if (!res.ok) throw new Error('Failed to update job');
             return res.json();
         },
-        getOne: async (idOrSlug: string | number) => {
+        getOne: async (idOrSlug: string | number): Promise<Job> => {
             const res = await fetch(`${API_BASE}/jobs/${idOrSlug}`);
             if (!res.ok) throw new Error('Failed to fetch job');
             return res.json();
@@ -49,55 +51,44 @@ export const api = {
             if (!res.ok) throw new Error('Failed to delete job');
             return res.json();
         },
-        apply: async (data: any) => {
-            const isFormData = data instanceof FormData;
-            const headers: Record<string, string> = isFormData ? {} : { 'Content-Type': 'application/json' };
-
+        apply: async (data: FormData) => {
             const res = await fetch(`${API_BASE}/job-applications`, {
                 method: 'POST',
-                headers,
-                body: isFormData ? data : JSON.stringify(data),
+                body: data,
             });
             if (!res.ok) throw new Error('Failed to submit application');
             return res.json();
         },
     },
     blogs: {
-        getAll: async () => {
+        getAll: async (): Promise<BlogPost[]> => {
             const res = await fetch(`${API_BASE}/fetch-blog-posts`);
             if (!res.ok) throw new Error('Failed to fetch blogs');
             return res.json();
         },
-        create: async (data: any) => {
-            const isFormData = data instanceof FormData;
-            const headers: Record<string, string> = isFormData ? {} : { 'Content-Type': 'application/json' };
-
+        create: async (data: FormData) => {
             const res = await fetch(`${API_BASE}/insertblogpost`, {
                 method: 'POST',
-                headers,
-                body: isFormData ? data : JSON.stringify(data),
+                body: data,
             });
             if (!res.ok) throw new Error('Failed to create blog');
             return res.json();
         },
-        update: async (data: any) => {
-            const isFormData = data instanceof FormData;
-            const headers: Record<string, string> = isFormData ? {} : { 'Content-Type': 'application/json' };
-
-            const res = await fetch(`${API_BASE}/update-blog-post/${data.id}`, {
+        update: async (data: FormData) => {
+            const id = data.get('id');
+            const res = await fetch(`${API_BASE}/update-blog-post/${id}`, {
                 method: 'PUT',
-                headers,
-                body: isFormData ? data : JSON.stringify(data),
+                body: data,
             });
             if (!res.ok) throw new Error('Failed to update blog');
             return res.json();
         },
-        getOne: async (id: number | string) => {
+        getOne: async (id: number | string): Promise<BlogPost> => {
             const res = await fetch(`${API_BASE}/fetch-blog-post/${id}`);
             if (!res.ok) throw new Error('Failed to fetch blog post');
             return res.json();
         },
-        getBySlug: async (slug: string) => {
+        getBySlug: async (slug: string): Promise<BlogPost> => {
             const res = await fetch(`${API_BASE}/fetch-blog-post-by-slug/${slug}`);
             if (!res.ok) throw new Error('Failed to fetch blog post');
             return res.json();
@@ -111,12 +102,12 @@ export const api = {
         },
     },
     applications: {
-        getAll: async () => {
+        getAll: async (): Promise<JobApplication[]> => {
             const res = await fetch(`${API_BASE}/job-applications`);
             if (!res.ok) throw new Error('Failed to fetch applications');
             return res.json();
         },
-        getByJobId: async (jobId: number) => {
+        getByJobId: async (jobId: number): Promise<JobApplication[]> => {
             const res = await fetch(`${API_BASE}/job-applications/${jobId}`);
             if (!res.ok) throw new Error('Failed to fetch applications');
             return res.json();

@@ -1,53 +1,101 @@
-import React, { useRef, useLayoutEffect, useMemo, Suspense, MutableRefObject } from "react";
-import { Canvas, useFrame, useLoader, useThree } from "@react-three/fiber";
+import React, { useRef, useMemo, MutableRefObject } from "react";
+import { useFrame, useLoader } from "@react-three/fiber";
 import * as THREE from "three";
-import { Stars, Preload } from "@react-three/drei";
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { Canvas } from "@react-three/fiber";
+import { Suspense } from "react";
 
-gsap.registerPlugin(ScrollTrigger);
+// Sun from the right — creates day/night split matching reference
+const SUN_DIR = new THREE.Vector3(1.0, 0.15, 0.2).normalize();
 
-// High-Res Earth Textures
 const TEXTURES = {
-  earth: "https://threejs.org/examples/textures/planets/earth_atmos_2048.jpg",
-  earthNormal:
-    "https://threejs.org/examples/textures/planets/earth_normal_2048.jpg",
-  earthSpec:
-    "https://threejs.org/examples/textures/planets/earth_specular_2048.jpg",
-  clouds: "https://threejs.org/examples/textures/planets/earth_clouds_1024.png",
+  earth: "/textures/earth_atmos_2048.jpg",
+  night: "https://threejs.org/examples/textures/planets/earth_lights_2048.png",
+  clouds: "/textures/earth_clouds_1024.png",
+  normal: "/textures/earth_normal_2048.jpg",
+  specular: "/textures/earth_specular_2048.jpg",
 };
 
+const VERT = /* glsl */ `
+  varying vec3 vNormal;
+  varying vec3 vWorldNormal;
+  varying vec2 vUv;
+  varying vec3 vViewDir;
 
-// Atmospheric Scattering Shader
-const AtmosphereShader = {
-  uniforms: {
-    uColor: { value: new THREE.Color("#88ccff") },
-    uOpacity: { value: 0.08 },
-    uPower: { value: 3.5 },
-  },
-  vertexShader: `
-    varying vec3 vNormal;
-    varying vec3 vPosition;
-    void main() {
-      vNormal = normalize(normalMatrix * normal);
-      vPosition = (modelViewMatrix * vec4(position, 1.0)).xyz;
-      gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-    }
-  `,
-  fragmentShader: `
-    varying vec3 vNormal;
-    varying vec3 vPosition;
-    uniform vec3 uColor;
-    uniform float uOpacity;
-    uniform float uPower;
-    void main() {
-      vec3 viewDirection = normalize(-vPosition);
-      float fresnel = pow(1.0 - dot(vNormal, viewDirection), uPower);
-      gl_FragColor = vec4(uColor, fresnel * uOpacity);
-    }
-  `,
-};
+  void main() {
+    vNormal      = normalize(normalMatrix * normal);
+    vWorldNormal = normalize((modelMatrix * vec4(normal, 0.0)).xyz);
+    vec4 worldPos = modelMatrix * vec4(position, 1.0);
+    vViewDir     = normalize(cameraPosition - worldPos.xyz);
+    vUv          = uv;
+    gl_Position  = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+  }
+`;
 
+const FRAG = /* glsl */ `
+  uniform sampler2D uDayMap;
+  uniform sampler2D uNightMap;
+  uniform sampler2D uSpecMap;
+  uniform vec3      uSunDirection;
+
+  varying vec3 vNormal;
+  varying vec3 vWorldNormal;
+  varying vec2 vUv;
+  varying vec3 vViewDir;
+
+  void main() {
+    vec3  N = normalize(vWorldNormal);
+    vec3  V = normalize(vViewDir);
+    vec3  sunDir = normalize(uSunDirection);
+    float NdotL  = dot(N, sunDir);
+
+    // ── Day/night blend ─────────────────────────────────────────────────
+    float day = smoothstep(-0.02, 0.08, NdotL);
+
+    // ── DAY SIDE — vivid, fully lit ─────────────────────────────────────
+    vec3  dayTex = texture2D(uDayMap, vUv).rgb;
+    float grey   = dot(dayTex, vec3(0.299, 0.587, 0.114));
+    dayTex       = mix(vec3(grey), dayTex, 1.35);
+    float diff   = clamp(NdotL * 1.5 + 0.1, 0.0, 1.0);
+    vec3  dayLit = dayTex * diff;
+
+    // Ocean specular glint (day only)
+    float specMask = texture2D(uSpecMap, vUv).r;
+    vec3  H        = normalize(sunDir + V);
+    float spec     = pow(max(dot(N, H), 0.0), 80.0) * specMask;
+    dayLit        += vec3(0.9, 0.95, 1.0) * spec * 0.35 * diff;
+
+    // ── NIGHT SIDE — dark blue with golden city lights ──────────────────
+    // Dark blue base from the day texture
+    vec3 nightBase = dayTex * vec3(0.08, 0.10, 0.22);
+
+    // Golden city lights
+    vec3  nightTex = texture2D(uNightMap, vUv).rgb;
+    float cityLum  = max(nightTex.r, max(nightTex.g, nightTex.b));
+    float cityMask = smoothstep(0.08, 0.3, cityLum);
+    vec3  cityGlow = nightTex * cityMask * vec3(1.0, 0.82, 0.4) * 2.5;
+    cityGlow = clamp(cityGlow, 0.0, 1.0);
+
+    vec3 nightLit = nightBase + cityGlow;
+
+    // ── Blend day and night ─────────────────────────────────────────────
+    vec3 color = mix(nightLit, dayLit, day);
+
+    // ── Cyan atmospheric rim — stronger on night side ───────────────────
+    float viewDot = abs(dot(vNormal, vec3(0.0, 0.0, 1.0)));
+    float rim     = pow(1.0 - viewDot, 3.5);
+    vec3  rimDay   = vec3(0.2, 0.5, 1.0) * 0.4;
+    vec3  rimNight = vec3(0.0, 0.7, 1.0) * 0.7;
+    color += mix(rimNight, rimDay, day) * rim;
+
+    // ── Natural edge shadow — darken limb for depth ───────────────────
+    float edgeFade = pow(viewDot, 0.4);
+    color *= edgeFade;
+
+    gl_FragColor = vec4(color, 1.0);
+  }
+`;
+
+// ── Types ─────────────────────────────────────────────────────────────────
 export interface SceneProxy {
   scale: number;
   rotationSpeed: number;
@@ -60,195 +108,171 @@ interface EarthSceneProps {
   proxy?: MutableRefObject<SceneProxy>;
 }
 
-// Earth Scene Component
+// ── EarthScene ────────────────────────────────────────────────────────────
 export const EarthScene: React.FC<EarthSceneProps> = ({ proxy }) => {
-  const earthRef = useRef<THREE.Group>(null);
+  const groupRef = useRef<THREE.Group>(null);
   const cloudsRef = useRef<THREE.Mesh>(null);
-  const atmosphereRef = useRef<THREE.ShaderMaterial>(null);
 
-  // Internal proxy fallback if none provided
-  const internalProxy = useRef({
-    scale: 1,
-    rotationSpeed: 0.02,
-    positionX: 0,
-    positionY: 0,
-    positionZ: 0,
+  const fallback = useRef<SceneProxy>({
+    scale: 1, rotationSpeed: 0.02,
+    positionX: 0, positionY: 0, positionZ: 0,
   });
+  const activeProxy = proxy ?? fallback;
 
-  // Use provided proxy or fallback to internal
-  const activeProxy = proxy || internalProxy;
-
-  const [earthMap, earthNormal, earthSpec, cloudsMap] = useLoader(
+  const [dayMap, nightMap, cloudsMap, , specMap] = useLoader(
     THREE.TextureLoader,
-    [TEXTURES.earth, TEXTURES.earthNormal, TEXTURES.earthSpec, TEXTURES.clouds]
+    [TEXTURES.earth, TEXTURES.night, TEXTURES.clouds, TEXTURES.normal, TEXTURES.specular]
   );
 
-  const atmosphereConfig = useMemo(
+  // Show Asia/Europe — similar to the reference view
+  const INITIAL_ROT = -0.5;
+
+  const earthUniforms = useMemo(
     () => ({
-      ...AtmosphereShader,
-      uniforms: THREE.UniformsUtils.clone(AtmosphereShader.uniforms),
+      uDayMap: { value: dayMap },
+      uNightMap: { value: nightMap },
+      uSpecMap: { value: specMap },
+      uSunDirection: { value: SUN_DIR.clone() },
     }),
-    []
+    [dayMap, nightMap, specMap]
   );
 
-  useLayoutEffect(() => {
-    // Only set up internal GSAP if no external proxy is provided
-    if (proxy) return;
-
-    const ctx = gsap.context(() => {
-      const isMobile = window.innerWidth < 768;
-
-      // Parallax scroll animation
-      gsap.to(activeProxy.current, {
-        scale: isMobile ? 1.3 : 1.8,
-        positionZ: isMobile ? 0 : 2,
-        positionY: isMobile ? -0.5 : -1,
-        rotationSpeed: 0.02, // slower on scroll too
-        scrollTrigger: {
-          trigger: document.body,
-          start: "top top",
-          end: "+=1500",
-          scrub: 1.5,
-        },
-      });
-
-      // Fade out as user scrolls - this might need to be handled by parent if proxy is used
-      // For now, we keep it here only if no proxy, or assume parent handles opacity separately
-      if (earthRef.current) {
-        gsap.to(earthRef.current.scale, {
-          scrollTrigger: {
-            trigger: document.body,
-            start: "top top",
-            end: "+=1500",
-            scrub: 1.5,
-          },
-        });
-      }
-    });
-
-    return () => {
-      ctx.revert();
-      ScrollTrigger.getAll().forEach((t) => t.kill());
-    };
-  }, [proxy]);
-
-  // Smooth mouse influence to prevent vibration
-  const currentMouseInfluence = useRef(0);
-
-  useFrame(({ clock, mouse }) => {
-    const time = clock.getElapsedTime();
+  useFrame(({ invalidate }) => {
+    const g = groupRef.current;
+    if (!g) return;
+    g.rotation.y += 0.0003;
+    if (cloudsRef.current) cloudsRef.current.rotation.y += 0.0005;
     const p = activeProxy.current;
-
-    if (earthRef.current) {
-      // Continuous rotation
-      earthRef.current.rotation.y += 0.0005;
-
-      const targetInfluence = ScrollTrigger.isScrolling() ? 0 : 0.15;
-      currentMouseInfluence.current = THREE.MathUtils.lerp(
-        currentMouseInfluence.current,
-        targetInfluence,
-        0.1
-      );
-
-      earthRef.current.position.x =
-        p.positionX + mouse.x * currentMouseInfluence.current;
-      earthRef.current.position.y =
-        p.positionY + mouse.y * currentMouseInfluence.current;
-
-      earthRef.current.scale.setScalar(p.scale);
-      earthRef.current.position.z = p.positionZ;
-    }
-
-    if (cloudsRef.current) {
-      cloudsRef.current.rotation.y = time * (p.rotationSpeed + 0.01);
-    }
+    g.scale.setScalar(p.scale);
+    g.position.set(p.positionX, p.positionY, p.positionZ);
+    invalidate();
   });
 
   return (
-    <group ref={earthRef} position={[0, 0, 0]}>
-      {/* Main Earth Sphere */}
-      <mesh castShadow receiveShadow>
-        <sphereGeometry args={[2.5, 64, 64]} />
-        <meshStandardMaterial
-          map={earthMap}
-          normalMap={earthNormal}
-          roughnessMap={earthSpec}
-          metalness={0.3}
-          roughness={0.7}
-        />
-      </mesh>
-
-      {/* Cloud Layer */}
-      <mesh ref={cloudsRef} scale={1.02}>
-        <sphereGeometry args={[2.5, 64, 64]} />
-        <meshStandardMaterial
-          map={cloudsMap}
-          transparent
-          opacity={0.35}
-          depthWrite={false}
-        />
-      </mesh>
-
-      {/* Subtle Atmospheric Glow */}
-      <mesh scale={1.03}>
+    <group ref={groupRef} rotation={[0.15, INITIAL_ROT, -0.05]}>
+      {/* Earth surface */}
+      <mesh>
         <sphereGeometry args={[2.5, 64, 64]} />
         <shaderMaterial
-          ref={atmosphereRef}
-          {...atmosphereConfig}
-          side={THREE.BackSide}
+          vertexShader={VERT}
+          fragmentShader={FRAG}
+          uniforms={earthUniforms}
+        />
+      </mesh>
+
+      {/* Cloud layer — only visible on day side, fully transparent on night */}
+      <mesh ref={cloudsRef} scale={1.005}>
+        <sphereGeometry args={[2.5, 32, 32]} />
+        <shaderMaterial
           transparent
+          depthWrite={false}
+          uniforms={{
+            uCloudMap: { value: cloudsMap },
+            uSunDirection: { value: SUN_DIR.clone() },
+          }}
+          vertexShader={`
+            varying vec2 vUv;
+            varying vec3 vWorldNormal;
+            void main() {
+              vUv = uv;
+              vWorldNormal = normalize((modelMatrix * vec4(normal, 0.0)).xyz);
+              gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+            }
+          `}
+          fragmentShader={`
+            uniform sampler2D uCloudMap;
+            uniform vec3 uSunDirection;
+            varying vec2 vUv;
+            varying vec3 vWorldNormal;
+            void main() {
+              float NdotL = dot(normalize(vWorldNormal), normalize(uSunDirection));
+              float dayFactor = smoothstep(-0.02, 0.08, NdotL);
+              vec4 cloud = texture2D(uCloudMap, vUv);
+              gl_FragColor = vec4(cloud.rgb, cloud.a * 0.4 * dayFactor);
+            }
+          `}
+        />
+      </mesh>
+
+      {/* Inner atmosphere glow — front-facing ozone layer */}
+      <mesh scale={1.015}>
+        <sphereGeometry args={[2.5, 64, 64]} />
+        <shaderMaterial
+          transparent
+          depthWrite={false}
+          vertexShader={`
+            varying vec3 vNormal;
+            varying vec3 vWorldNormal;
+            void main() {
+              vNormal = normalize(normalMatrix * normal);
+              vWorldNormal = normalize((modelMatrix * vec4(normal, 0.0)).xyz);
+              gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+            }
+          `}
+          fragmentShader={`
+            uniform vec3 uSunDirection;
+            varying vec3 vNormal;
+            varying vec3 vWorldNormal;
+            void main() {
+              float fresnel = 1.0 - abs(dot(vNormal, vec3(0.0, 0.0, 1.0)));
+              float rim = pow(fresnel, 2.5);
+              // Cyan glow all around, brighter on edges
+              vec3 col = vec3(0.0, 0.6, 1.0);
+              gl_FragColor = vec4(col, rim * 0.35);
+            }
+          `}
+          uniforms={{
+            uSunDirection: { value: SUN_DIR.clone() },
+          }}
+        />
+      </mesh>
+
+      {/* Outer atmosphere glow — backside for wider halo */}
+      <mesh scale={1.04}>
+        <sphereGeometry args={[2.5, 32, 32]} />
+        <shaderMaterial
+          transparent
+          depthWrite={false}
+          vertexShader={`
+            varying vec3 vNormal;
+            void main() {
+              vNormal = normalize(normalMatrix * normal);
+              gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+            }
+          `}
+          fragmentShader={`
+            varying vec3 vNormal;
+            void main() {
+              float intensity = pow(0.75 - dot(vNormal, vec3(0.0, 0.0, 1.0)), 2.5);
+              gl_FragColor = vec4(0.0, 0.55, 1.0, intensity * 0.4);
+            }
+          `}
+          side={THREE.BackSide}
         />
       </mesh>
     </group>
   );
 };
 
-// Fallback loader component
-const Loader: React.FC = () => {
-  return null;
-};
+// ── Standalone Earth3D ────────────────────────────────────────────────────
+const _Loader: React.FC = () => null;
 
-// Main Earth3D Component
-export const Earth3D: React.FC<{ className?: string }> = ({ className }) => {
-  return (
-    <div className={className}>
-      <Canvas
-        camera={{ position: [0, 0, 8], fov: 45 }}
-        gl={{
-          antialias: true,
-          alpha: true,
-          powerPreference: "high-performance",
-        }}
-        dpr={[1, 2]}
-        style={{ background: "transparent" }}
-        frameloop="always"
-      >
-        <Suspense fallback={<Loader />}>
-          {/* Lighting needed for standalone */}
-          <ambientLight intensity={0.15} />
-          <directionalLight
-            position={[10, 5, 5]}
-            intensity={2.5}
-            color="#fff5f0"
-            castShadow
-          />
-          <pointLight position={[-15, -10, -10]} intensity={0.8} color="#4477ff" />
-          <pointLight position={[0, 10, 5]} intensity={0.5} color="#ffffff" />
-          <Stars
-            radius={100}
-            depth={50}
-            count={5000}
-            factor={4}
-            saturation={0}
-            fade
-            speed={0.5}
-          />
-          <EarthScene />
-          <Preload all />
-        </Suspense>
-      </Canvas>
-    </div>
-  );
-};
+export const Earth3D: React.FC<{ className?: string }> = ({ className }) => (
+  <div className={className}>
+    <Canvas
+      camera={{ position: [0, 0, 8], fov: 45 }}
+      gl={{ antialias: false, alpha: true, powerPreference: "high-performance" }}
+      dpr={[1, 1.5]}
+      style={{ background: "transparent" }}
+      frameloop="demand"
+    >
+      <Suspense fallback={<_Loader />}>
+        <ambientLight intensity={0.03} />
+        <directionalLight position={[6, 2, 2]} intensity={2.2} color="#fff5e8" />
+        <EarthScene />
+      </Suspense>
+    </Canvas>
+  </div>
+);
 
 export default Earth3D;

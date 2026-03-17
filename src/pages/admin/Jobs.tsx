@@ -11,12 +11,13 @@ import { Textarea } from '@/components/ui/textarea';
 import { Plus, Pencil, Trash2, Loader2, Users } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
+import type { Job } from '@/types/api';
 
 export default function AdminJobs() {
-    const [jobs, setJobs] = useState<any[]>([]);
+    const [jobs, setJobs] = useState<Job[]>([]);
     const [loading, setLoading] = useState(true);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
-    const [editingJob, setEditingJob] = useState<any | null>(null);
+    const [editingJob, setEditingJob] = useState<Job | null>(null);
 
     // Form state
     const [formData, setFormData] = useState({
@@ -94,7 +95,7 @@ export default function AdminJobs() {
         });
     };
 
-    const openEdit = (job: any) => {
+    const openEdit = (job: Job) => {
         setEditingJob(job);
         setFormData({
             title: job.title,

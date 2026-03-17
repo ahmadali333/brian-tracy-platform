@@ -13,6 +13,7 @@ import {
   Copy,
 } from "lucide-react";
 import { api } from "@/services/api";
+import type { ArticleDisplay } from "@/types/api";
 import DOMPurify from "dompurify";
 import { useLenis } from "@/hooks/useLenis";
 import { toast } from "@/hooks/use-toast";
@@ -25,12 +26,13 @@ const ArticleDetails = () => {
   useLenis();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [article, setArticle] = useState<any>(null);
+  const [article, setArticle] = useState<ArticleDisplay | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
   useEffect(() => {
     if (!id) return;
+    let cancelled = false;
     setLoading(true);
 
     const isNumeric = /^\d+$/.test(id);
@@ -38,12 +40,12 @@ const ArticleDetails = () => {
 
     fetchPromise
       .then((data) => {
-        // Map backend fields to frontend expected structure
+        if (cancelled) return;
         setArticle({
           ...data,
           date: data.uploadDate,
           image: data.blogImage,
-          tags: data.metaTags ? data.metaTags.split(',').map((t: string) => t.trim()) : [], // Assuming comma separated or array
+          tags: data.metaTags ? data.metaTags.split(',').map((t: string) => t.trim()) : [],
           author: typeof data.author === 'string'
             ? { name: data.author, role: 'Editor', avatar: getAvatarUrl(data.slug || data.id || data.title) }
             : data.author || { name: 'Admin', role: 'Editor', avatar: getAvatarUrl(data.slug || data.id || data.title) }
@@ -51,10 +53,12 @@ const ArticleDetails = () => {
         setLoading(false);
       })
       .catch((err) => {
+        if (cancelled) return;
         console.error(err);
         setError(true);
         setLoading(false);
       });
+    return () => { cancelled = true; };
   }, [id]);
 
   usePageMetadata({
@@ -71,12 +75,12 @@ const ArticleDetails = () => {
   }, [id]);
 
   if (loading) {
-    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+    return <div className="min-h-screen flex items-center justify-center section-forced-light">Loading...</div>;
   }
 
   if (!article || error) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center section-forced-light">
         <div className="text-center">
           <h1 className="text-4xl font-bold mb-4">Article Not Found</h1>
           <Link to="/articles" className="text-primary hover:underline">
@@ -94,7 +98,7 @@ const ArticleDetails = () => {
   return <ArticleContent article={article} prevArticle={prevArticle} nextArticle={nextArticle} />;
 };
 
-const ArticleContent = ({ article, prevArticle, nextArticle }: { article: any, prevArticle: any, nextArticle: any }) => {
+const ArticleContent = ({ article, prevArticle, nextArticle }: { article: ArticleDisplay, prevArticle: ArticleDisplay | null, nextArticle: ArticleDisplay | null }) => {
   const heroRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const progressRef = useRef<HTMLDivElement>(null);
@@ -148,7 +152,7 @@ const ArticleContent = ({ article, prevArticle, nextArticle }: { article: any, p
   };
 
   return (
-    <main className="min-h-screen bg-background">
+    <main className="min-h-screen section-forced-light">
       {/* Reading Progress Bar */}
       <motion.div
         ref={progressRef}
@@ -266,7 +270,7 @@ const ArticleContent = ({ article, prevArticle, nextArticle }: { article: any, p
           <div className="grid lg:grid-cols-[1fr_300px] gap-12 max-w-6xl mx-auto">
             {/* Main Content */}
             <motion.article
-              className="prose prose-lg dark:prose-invert max-w-none min-w-0"
+              className="prose prose-lg prose-invert max-w-none min-w-0"
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.5 }}

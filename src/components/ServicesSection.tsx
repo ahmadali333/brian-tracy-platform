@@ -1,123 +1,69 @@
 import {
   motion,
-  useScroll,
-  useTransform,
   useInView,
 } from "framer-motion";
-import { useRef, useState } from "react";
+import { useRef } from "react";
 import { ArrowUpRight } from "lucide-react";
-import { LineReveal } from "./AnimationComponents";
+import { LineReveal, Magnetic } from "./AnimationComponents";
+import { useNavigate } from "react-router-dom";
 
 const services = [
   {
     number: "01",
-    title: "AI Products & SaaS Development",
-    description:
-      "We design and build revenue‑ready AI products, SaaS platforms, and modern applications with strong technical foundations.", image:
-      "https://images.unsplash.com/photo-1634942537034-2531766767d1?w=600&q=80",
+    title: "AI/ML Development",
+    description: "Real‑world AI systems — from document intelligence to custom agents and workflows — integrated directly into your business.",
+    image: "https://images.unsplash.com/photo-1634942537034-2531766767d1?w=600&q=80",
+    slug: "ai-ml",
   },
   {
     number: "02",
-    title: "AI Business Systems & Internal Tool",
-    description:
-      "We create intelligent internal platforms, dashboards, and automation systems that streamline operations and unlock growth.", image:
-      "https://images.unsplash.com/photo-1561070791-2526d30994b5?w=600&q=80",
+    title: "Enterprise Software",
+    description: "Intelligent internal platforms, dashboards, and automation systems that streamline operations and unlock growth at scale.",
+    image: "https://images.unsplash.com/photo-1561070791-2526d30994b5?w=600&q=80",
+    slug: "enterprise",
   },
   {
     number: "03",
-    title: "AI Integrations, Agents & Automation",
-    description:
-      "We build real‑world AI systems — from document intelligence to custom agents and workflows — integrated into your business.", image:
-      "https://images.unsplash.com/photo-1611162617474-5b21e879e113?w=600&q=80",
+    title: "SaaS Development",
+    description: "Revenue‑ready AI products and SaaS platforms engineered for speed, security, and effortless scalability from day one.",
+    image: "https://images.unsplash.com/photo-1611162617474-5b21e879e113?w=600&q=80",
+    slug: "saas",
   },
   {
     number: "04",
-    title: "MVP → Scalable Platform Engineering",
-    description:
-      "We help founders go from idea to production‑grade platform with scalable architecture and long‑term product vision.", image:
-      "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=600&q=80",
+    title: "MVP & POC Development",
+    description: "From idea to production‑grade platform — lean MVPs and prototypes that prove your concept and attract investors fast.",
+    image: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=600&q=80",
+    slug: "mvp",
   },
   {
     number: "05",
     title: "Product Architecture & Technical Strategy",
-    description:
-      "We partner with teams on system design, AI strategy, and engineering direction to reduce risk and build smarter.", image:
-      "https://images.unsplash.com/photo-1547658719-da2b51169166?w=600&q=80",
+    description: "System design, AI strategy, and engineering direction that reduces risk and enables smarter decisions at every stage.",
+    image: "https://images.unsplash.com/photo-1547658719-da2b51169166?w=600&q=80",
+    slug: "strategy",
   },
-  {
-    number: "06",
-    title: "Product Design, UX & Growth Enablement",
-    description:
-      "We design product‑focused UI/UX, brand systems, and growth‑ready experiences that support adoption, conversion, and long‑term product success.", image:
-      "https://images.unsplash.com/photo-1547658719-da2b51169166?w=600&q=80",
-  }
 ];
 
 export const ServicesSection = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const isInView = useInView(containerRef, { once: true, margin: "-10%" });
-  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
-
-  const { scrollYProgress } = useScroll({
-    target: containerRef,
-    offset: ["start end", "end start"],
-  });
-
-
-
-  const handleMouseMove = (e: React.MouseEvent) => {
-    setMousePosition({ x: e.clientX, y: e.clientY });
-  };
+  const navigate = useNavigate();
 
   return (
+    <div className="px-4 md:px-6 lg:px-8 pb-4 md:pb-6 lg:pb-8" style={{ backgroundColor: "#ffffff" }}>
     <section
       id="services"
-      className="section-padding md:py-20 py-24 relative overflow-hidden"
+      className="section-forced-dark section-padding pt-16 md:pt-20 pb-20 md:pb-24 overflow-hidden relative z-10 rounded-[1.5rem] md:rounded-[2rem]"
+      style={{ boxShadow: "0 4px 30px rgba(0,0,0,0.12), 0 0 0 1px rgba(6,219,207,0.08)" }}
       ref={containerRef}
-      onMouseMove={handleMouseMove}
     >
-      {/* Greenish background glow */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        <motion.div
-          className="absolute top-[calc(50%-350px)] right-0 w-[700px] h-[700px] rounded-full bg-accent/20 blur-[130px]"
-          animate={{
-            x: [0, -60, 20, -40, 0],
-            y: [0, 60, -40, 30, 0],
-            opacity: [0.6, 1, 0.4, 0.9, 0.6],
-          }}
-          transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
-        />
-      </div>
 
-      {/* Floating image that follows cursor when hovering */}
-      <motion.div
-        className="fixed pointer-events-none z-50 w-64 h-80 rounded-xl overflow-hidden"
-        animate={{
-          x: mousePosition.x - 128,
-          y: mousePosition.y - 160,
-          opacity: hoveredIndex !== null ? 1 : 0,
-          scale: hoveredIndex !== null ? 1 : 0.8,
-        }}
-        transition={{ type: "spring", stiffness: 150, damping: 20 }}
-      >
-        {hoveredIndex !== null && (
-          <motion.img
-            src={services[hoveredIndex].image}
-            alt={`${services[hoveredIndex].title} service by Forrof software agency`}
-            className="w-full h-full object-cover"
-            initial={{ scale: 1.2 }}
-            loading="lazy"
-            animate={{ scale: 1 }}
-            transition={{ duration: 0.4 }}
-          />
-        )}
-      </motion.div>
 
       <div className="max-w-[1800px] mx-auto relative z-10">
         {/* Header */}
         <motion.div
-          className="flex items-center gap-4 mb-20"
+          className="flex items-center gap-4 mb-12"
           initial={{ opacity: 0, y: 30 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 1, ease: [0.25, 0.1, 0.25, 1] }}
@@ -142,10 +88,10 @@ export const ServicesSection = () => {
         </motion.div>
 
         {/* Title Grid */}
-        <div className="grid lg:grid-cols-2 gap-16 mb-24">
+        <div className="grid lg:grid-cols-2 gap-12 mb-16">
           <div className="overflow-hidden">
             <motion.h2
-              className="text-5xl md:text-6xl lg:text-7xl xl:text-8xl pb-2 font-bold leading-[0.95]"
+              className="text-4xl md:text-5xl lg:text-6xl xl:text-7xl pb-2 font-bold leading-[0.95]"
               initial={{ y: "100%" }}
               animate={isInView ? { y: 0 } : {}}
               transition={{
@@ -178,73 +124,30 @@ export const ServicesSection = () => {
               initial={{ opacity: 0, y: 40 }}
               animate={isInView ? { opacity: 1, y: 0 } : {}}
               transition={{ duration: 0.8, delay: 0.3 + index * 0.1 }}
-              onMouseEnter={() => setHoveredIndex(index)}
-              onMouseLeave={() => setHoveredIndex(null)}
+              onClick={() => navigate(`/services/${service.slug}`)}
             >
-              <div className="py-8 md:py-10 flex items-start md:items-center justify-between gap-6">
+              <div className="py-6 md:py-8 flex items-start md:items-center justify-between gap-6">
                 <div className="flex items-start md:items-center gap-6 md:gap-16 flex-1">
-                  <motion.span
-                    className="text-sm text-muted-foreground font-medium min-w-[40px]"
-                    animate={{
-                      color:
-                        hoveredIndex === index
-                          ? "hsl(var(--foreground))"
-                          : "hsl(var(--muted-foreground))",
-                    }}
-                  >
+                  <span className="text-sm text-muted-foreground group-hover:text-foreground font-medium min-w-[40px] transition-colors duration-300">
                     /{service.number}
-                  </motion.span>
+                  </span>
                   <div className="md:overflow-visible">
-                    <motion.h3
-                      className="text-2xl md:text-4xl lg:text-5xl font-semibold"
-                      animate={{
-                        x: hoveredIndex === index ? 30 : 0,
-                      }}
-                      transition={{ duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
-                    >
+                    <h3 className="text-xl md:text-2xl lg:text-3xl font-semibold group-hover:translate-x-7 transition-transform duration-500">
                       {service.title}
-                    </motion.h3>
+                    </h3>
                   </div>
                 </div>
-                <motion.div
-                  className="w-12 h-12 rounded-full border border-border flex items-center justify-center"
-                  animate={{
-                    backgroundColor:
-                      hoveredIndex === index
-                        ? "hsl(var(--foreground))"
-                        : "transparent",
-                    borderColor:
-                      hoveredIndex === index
-                        ? "hsl(var(--foreground))"
-                        : "hsl(var(--border))",
-                    rotate: hoveredIndex === index ? 45 : 0,
-                  }}
-                  transition={{ duration: 0.4 }}
-                >
-                  <ArrowUpRight
-                    size={20}
-                    className={
-                      hoveredIndex === index
-                        ? "text-background"
-                        : "text-foreground"
-                    }
-                  />
-                </motion.div>
+                <div className="w-12 h-12 rounded-full border border-border group-hover:bg-foreground group-hover:border-foreground group-hover:rotate-45 flex items-center justify-center transition-all duration-400">
+                  <ArrowUpRight size={20} className="text-foreground group-hover:text-background transition-colors duration-300" />
+                </div>
               </div>
 
               {/* Expandable description */}
-              <motion.div
-                className="overflow-hidden"
-                initial={{ height: 0 }}
-                animate={{
-                  height: hoveredIndex === index ? "auto" : 0,
-                }}
-                transition={{ duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
-              >
+              <div className="max-h-0 group-hover:max-h-[200px] overflow-hidden transition-all duration-500">
                 <p className="text-muted-foreground pb-8 pl-0 md:pl-[104px] max-w-2xl leading-relaxed">
                   {service.description}
                 </p>
-              </motion.div>
+              </div>
             </motion.div>
           ))}
           <motion.div
@@ -255,6 +158,27 @@ export const ServicesSection = () => {
             style={{ transformOrigin: "left" }}
           />
         </div>
+
+        {/* CTA */}
+        <motion.div
+          className="flex justify-center mt-20"
+          initial={{ opacity: 0, y: 30 }}
+          animate={isInView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.8, delay: 1.2 }}
+        >
+          <Magnetic>
+            <motion.button
+              onClick={() => navigate("/services")}
+              className="inline-flex items-center gap-3 px-10 py-5 rounded-full text-white overflow-hidden relative group font-medium"
+              style={{ background: "linear-gradient(135deg, #126b66, #00d4aa)" }}
+              whileHover={{ scale: 1.03, boxShadow: "0 0 20px rgba(72, 240, 231, 0.5), 0 0 40px rgba(72, 240, 231, 0.25), 0 0 60px rgba(72, 240, 231, 0.1)" }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <span className="relative z-10 font-medium">Explore All Services</span>
+              <ArrowUpRight size={18} className="relative z-10" />
+            </motion.button>
+          </Magnetic>
+        </motion.div>
       </div>
 
       {/* SEO description */}
@@ -268,5 +192,6 @@ export const ServicesSection = () => {
         </p>
       </div>
     </section>
+    </div>
   );
 };

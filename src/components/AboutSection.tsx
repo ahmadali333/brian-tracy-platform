@@ -1,148 +1,55 @@
-import {
-  motion,
-  useScroll,
-  useTransform,
-  useSpring,
-  useInView,
-  MotionValue,
-} from "framer-motion";
+import { motion, useInView } from "framer-motion";
 import { useRef } from "react";
 import { LineReveal, Magnetic } from "./AnimationComponents";
-import { ArrowUpRight, Award, Users, Globe, Zap } from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-
-const values = [
-  {
-    icon: Award,
-    title: "Excellence",
-    description: "We pursue engineering quality, scalability, and long‑term performance.",
-  },
-  {
-    icon: Users,
-    title: "Collaboration",
-    description: "We work as product partners, not just service providers.",
-  },
-  {
-    icon: Globe,
-    title: "Innovation",
-    description: "We build with AI‑first thinking and modern system design.",
-  },
-  {
-    icon: Zap,
-    title: "Impact",
-    description: "We create platforms that drive measurable business outcomes.",
-  },
-];
 
 const words =
   "We build intelligent products and business systems that turn software into a growth engine.".split(
     " "
   );
 
-// Separate component to handle word-by-word animation with hooks
-const WordByWordReveal = ({
-  words,
-  scrollProgress,
-}: {
-  words: string[];
-  scrollProgress: MotionValue<number>;
-}) => {
-  return (
-    <motion.p className="text-4xl md:text-5xl lg:text-6xl font-bold leading-[1.1] tracking-tight">
-      {words.map((word, i) => (
-        <WordItem
-          key={i}
-          word={word}
-          index={i}
-          totalWords={words.length}
-          scrollProgress={scrollProgress}
-        />
-      ))}
-    </motion.p>
-  );
-};
-
-// Individual word component with hooks at proper level
-const WordItem = ({
-  word,
-  index,
-  totalWords,
-  scrollProgress,
-}: {
-  word: string;
-  index: number;
-  totalWords: number;
-  scrollProgress: MotionValue<number>;
-}) => {
-  const start = index / totalWords;
-  const end = start + 1 / totalWords;
-
-  const opacity = useTransform(scrollProgress, [start, end], [0.2, 1]);
-  const y = useTransform(scrollProgress, [start, end], [20, 0]);
-
-  return (
-    <motion.span
-      className="inline-block mr-[0.3em]"
-      style={{
-        opacity,
-        y,
-      }}
-    >
-      {word}
-    </motion.span>
-  );
-};
+// Simple whileInView word reveal — no scroll-linked hooks
+const WordByWordReveal = ({ words }: { words: string[] }) => (
+  <p className="text-3xl md:text-4xl lg:text-5xl font-bold leading-[1.1] tracking-tight">
+    {words.map((word, i) => (
+      <motion.span
+        key={i}
+        className="inline-block mr-[0.3em]"
+        initial={{ opacity: 0.15, y: 16 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: "-5%" }}
+        transition={{ duration: 0.5, delay: i * 0.04, ease: [0.25, 0.1, 0.25, 1] }}
+      >
+        {word}
+      </motion.span>
+    ))}
+  </p>
+);
 
 export const AboutSection = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const isInView = useInView(containerRef, { once: true, margin: "-10%" });
-  const textRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
-
-  const { scrollYProgress } = useScroll({
-    target: containerRef,
-    offset: ["start end", "end start"],
-  });
-
-  const { scrollYProgress: textScrollProgress } = useScroll({
-    target: textRef,
-    offset: ["start 1", "end 0.9"],
-  });
-
-  const smoothProgress = useSpring(scrollYProgress, {
-    stiffness: 50,
-    damping: 20,
-  });
-  const imageX = useTransform(smoothProgress, [0, 1], [-100, 100]);
-  const imageRotate = useTransform(smoothProgress, [0, 1], [-5, 5]);
-  const statsY = useTransform(smoothProgress, [0, 1], [100, -50]);
 
   return (
     <section
-      className="section-padding md:py-20 py-12 relative overflow-hidden"
+      className="section-forced-light section-padding md:py-20 py-12 overflow-hidden"
       ref={containerRef}
+      data-no-cursor-light
     >
-      {/* Greenish background glow */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-1/2 -translate-y-1/2 right-0 w-[700px] h-[700px] rounded-full bg-accent/15 blur-[130px]" />
-      </div>
 
-      {/* Large decorative text in background */}
-      <motion.div
-        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none select-none"
-        style={{
-          scale: useTransform(smoothProgress, [0, 0.5, 1], [0.8, 1.1, 0.8]),
-        }}
-      >
+      {/* Large decorative text in background — static, no scroll animation */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none select-none">
         <span className="text-[25vw] font-bold text-foreground/[0.02] whitespace-nowrap">
           FORROF
         </span>
-      </motion.div>
+      </div>
 
       <div className="max-w-[1800px] mx-auto relative z-10">
         {/* Header */}
         <motion.div
-          className="flex items-center gap-4 mb-20"
+          className="flex items-center gap-4 mb-12"
           initial={{ opacity: 0, y: 30 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 1, ease: [0.25, 0.1, 0.25, 1] }}
@@ -155,13 +62,10 @@ export const AboutSection = () => {
         </motion.div>
 
         {/* Main Content Grid */}
-        <div className="grid lg:grid-cols-2 gap-20 items-center mb-32">
+        <div className="grid lg:grid-cols-2 gap-16 items-center">
           {/* Left - Big statement with word-by-word animation */}
-          <div ref={textRef} className="relative">
-            <WordByWordReveal
-              words={words}
-              scrollProgress={textScrollProgress}
-            />
+          <div className="relative">
+            <WordByWordReveal words={words} />
 
             <motion.div
               className="mt-12"
@@ -176,23 +80,18 @@ export const AboutSection = () => {
                     e.preventDefault();
                     navigate("/contact");
                   }}
-                  className="inline-flex items-center gap-3 px-8 py-4 bg-foreground text-background rounded-full overflow-hidden relative group"
+                  className="inline-flex items-center gap-3 px-8 py-4 rounded-full text-white overflow-hidden relative group"
+                  style={{ background: "linear-gradient(135deg, #126b66, #00d4aa)" }}
                   data-cursor="Let's Talk"
-                  whileHover={{ scale: 1.02 }}
+                  whileHover={{ scale: 1.03, boxShadow: "0 0 20px rgba(72, 240, 231, 0.5), 0 0 40px rgba(72, 240, 231, 0.25), 0 0 60px rgba(72, 240, 231, 0.1)" }}
                   whileTap={{ scale: 0.98 }}
                 >
-                  <motion.span
-                    className="absolute inset-0 bg-muted"
-                    initial={{ y: "100%" }}
-                    whileHover={{ y: 0 }}
-                    transition={{ duration: 0.4 }}
-                  />
-                  <span className="relative z-10 font-medium  transition-colors duration-300">
+                  <span className="relative z-10 font-medium">
                     Start a Project
                   </span>
                   <ArrowUpRight
                     size={18}
-                    className="relative z-10 transition-colors"
+                    className="relative z-10"
                   />
                 </motion.a>
               </Magnetic>
@@ -201,23 +100,19 @@ export const AboutSection = () => {
 
           {/* Right - Parallax Image Stack */}
           <motion.div
-            className="relative h-[600px]"
+            className="relative h-[350px] sm:h-[450px] lg:h-[600px]"
             initial={{ opacity: 0 }}
             animate={isInView ? { opacity: 1 } : {}}
             transition={{ delay: 0.4 }}
           >
             {/* Background image */}
             <motion.div
-              className="absolute top-0 right-0 w-4/5 h-4/5 rounded-3xl overflow-hidden"
-              style={{ x: imageX, rotate: imageRotate }}
+              className="absolute top-0 right-0 w-4/5 h-4/5 rounded-2xl lg:rounded-3xl overflow-hidden"
             >
-              <motion.img
+              <img
                 src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=800&q=80"
                 alt="Team collaboration"
                 className="w-full h-full object-cover"
-                initial={{ scale: 1.5 }}
-                animate={isInView ? { scale: 1 } : {}}
-                transition={{ duration: 2 }}
                 loading="lazy"
               />
               <div className="absolute inset-0 bg-foreground/20" />
@@ -226,32 +121,24 @@ export const AboutSection = () => {
             {/* Foreground image */}
             <motion.div
               className="absolute bottom-0 left-0 w-2/3 h-2/3 rounded-3xl overflow-hidden border-4 border-background"
-              style={{
-                x: useTransform(imageX, (v) => -v * 0.5),
-                rotate: useTransform(imageRotate, (v) => -v),
-              }}
               initial={{ y: 100, opacity: 0 }}
               animate={isInView ? { y: 0, opacity: 1 } : {}}
               transition={{ delay: 0.6, duration: 1 }}
             >
-              <motion.img
+              <img
                 src={`${import.meta.env.VITE_SERVER}/about-image.jpeg`}
                 alt="Creative work"
                 loading="lazy"
                 className="w-full h-full object-cover"
-                initial={{ scale: 1.5 }}
-                animate={isInView ? { scale: 1 } : {}}
-                transition={{ duration: 2, delay: 0.3 }}
               />
             </motion.div>
 
             {/* Floating stat card */}
             <motion.div
-              className="absolute -right-8 bottom-1/4 bg-foreground text-background p-6 rounded-2xl shadow-2xl"
-              style={{ y: statsY }}
+              className="absolute right-2 sm:right-0 lg:-right-8 bottom-1/4 bg-foreground text-background p-4 sm:p-6 rounded-2xl shadow-2xl"
               initial={{ opacity: 0, scale: 0.8 }}
               animate={isInView ? { opacity: 1, scale: 1 } : {}}
-              transition={{ delay: 1, type: "spring" }}
+              transition={{ delay: 1, duration: 0.6 }}
               whileHover={{ scale: 1.05, rotate: 5 }}
             >
               <motion.span
@@ -265,39 +152,6 @@ export const AboutSection = () => {
               <span className="text-sm opacity-70">Projects Delivered</span>
             </motion.div>
           </motion.div>
-        </div>
-
-        {/* Values Grid with Staggered Animation */}
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
-          {values.map((value, index) => (
-            <motion.div
-              key={value.title}
-              className="p-8 border border-border rounded-2xl group hover:bg-foreground hover:border-foreground transition-colors duration-500 cursor-pointer"
-              data-cursor={value.title}
-              initial={{ opacity: 0, y: 60, rotateX: -20 }}
-              animate={isInView ? { opacity: 1, y: 0, rotateX: 0 } : {}}
-              transition={{
-                duration: 0.5,
-                delay: 0.1,
-              }}
-              whileHover={{ y: -10, scale: 1.02 }}
-              style={{ transformStyle: "preserve-3d" }}
-            >
-              <motion.div
-                className="w-14 h-14 rounded-full border border-border flex items-center justify-center mb-6 group-hover:bg-background group-hover:border-background transition-all duration-500"
-                whileHover={{ rotate: 360 }}
-                transition={{ duration: 0.1 }}
-              >
-                <value.icon className="w-6 h-6 group-hover:text-foreground transition-colors" />
-              </motion.div>
-              <h3 className="text-xl font-semibold mb-3 group-hover:text-background transition-colors">
-                {value.title}
-              </h3>
-              <p className="text-muted-foreground group-hover:text-background/70 transition-colors text-sm leading-relaxed">
-                {value.description}
-              </p>
-            </motion.div>
-          ))}
         </div>
       </div>
     </section>

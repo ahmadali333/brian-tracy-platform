@@ -1,4 +1,4 @@
-import { motion, useScroll, useTransform, useSpring, MotionValue } from "framer-motion";
+import { motion, useScroll, useTransform } from "framer-motion";
 import { ReactNode, useRef } from "react";
 
 interface ParallaxProps {
@@ -15,10 +15,9 @@ export const Parallax = ({ children, speed = 0.5, className = "" }: ParallaxProp
   });
 
   const y = useTransform(scrollYProgress, [0, 1], [0, speed * 200]);
-  const smoothY = useSpring(y, { stiffness: 100, damping: 30 });
 
   return (
-    <motion.div ref={ref} style={{ y: smoothY }} className={className}>
+    <motion.div ref={ref} style={{ y }} className={className}>
       {children}
     </motion.div>
   );
@@ -151,10 +150,16 @@ interface MagneticProps {
 
 export const Magnetic = ({ children, className = "", strength = 0.3 }: MagneticProps) => {
   const ref = useRef<HTMLDivElement>(null);
+  // Cache rect on mouseenter — avoids getBoundingClientRect() on every mousemove frame
+  const rectRef = useRef<DOMRect | null>(null);
+
+  const handleMouseEnter = () => {
+    if (ref.current) rectRef.current = ref.current.getBoundingClientRect();
+  };
 
   const handleMouseMove = (e: React.MouseEvent) => {
-    if (!ref.current) return;
-    const rect = ref.current.getBoundingClientRect();
+    if (!ref.current || !rectRef.current) return;
+    const rect = rectRef.current;
     const x = e.clientX - rect.left - rect.width / 2;
     const y = e.clientY - rect.top - rect.height / 2;
     ref.current.style.transform = `translate(${x * strength}px, ${y * strength}px)`;
@@ -162,12 +167,14 @@ export const Magnetic = ({ children, className = "", strength = 0.3 }: MagneticP
 
   const handleMouseLeave = () => {
     if (!ref.current) return;
+    rectRef.current = null;
     ref.current.style.transform = "translate(0px, 0px)";
   };
 
   return (
     <motion.div
       ref={ref}
+      onMouseEnter={handleMouseEnter}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
       className={`transition-transform duration-300 ease-out ${className}`}

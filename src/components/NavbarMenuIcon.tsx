@@ -2,15 +2,14 @@ import {
   AnimatePresence,
   motion,
   useScroll,
-  useSpring,
   useTransform,
 } from "framer-motion";
-import { Ellipsis, X } from "lucide-react";
+import { X, Mail, ChevronRight } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Magnetic } from "./AnimationComponents";
 import { MusicPlayer } from "./MusicPlayer";
-import { ThemeToggle } from "./ThemeToggle";
 import { useNavigate, useLocation } from "react-router-dom";
+import { SOCIAL_LINKS } from "@/constants/links";
 
 interface NavLink {
   name: string;
@@ -24,6 +23,55 @@ const navLinks: NavLink[] = [
   { name: "Articles", href: "/articles" },
   { name: "Careers", href: "/careers" },
   { name: "Contact", href: "/contact" },
+];
+
+interface ServiceLink {
+  name: string;
+  slug: string;
+  subs: string[];
+}
+
+const serviceLinks: ServiceLink[] = [
+  {
+    name: "AI/ML Development",
+    slug: "ai-ml",
+    subs: ["AI Consulting", "Custom AI and ML Solutions", "Proof of Value / AI Prototype", "Generative AI & LLM-based Solutions", "Predictive Analytics & Forecasting", "AI-Powered Product Integrations"],
+  },
+  {
+    name: "Enterprise Software",
+    slug: "enterprise",
+    subs: ["Enterprise Innovation Labs", "CIO / CTO Offices", "Corporate Digital Ventures", "Regional Divisions and R&D", "Enterprise AI / Automation"],
+  },
+  {
+    name: "SaaS Development",
+    slug: "saas",
+    subs: ["Enterprise Application Development", "Custom AI/ML Solutions", "Digital Transformation", "Cross-platform SaaS Solutions", "End-to-end SaaS Product Development"],
+  },
+  {
+    name: "MVP & POC",
+    slug: "mvp",
+    subs: ["Product Discovery & Analysis", "Rapid Prototyping & UX/UI", "Technical Feasibility Planning", "Lean Product Roadmap", "No-Code/Low-Code MVPs", "Pitch Deck & Investor Materials"],
+  },
+  {
+    name: "Product Strategy",
+    slug: "strategy",
+    subs: ["Technical Due Diligence", "System Design & Architecture", "AI Strategy & Roadmapping", "CTO-as-a-Service", "Technology Stack Selection", "DevOps Consulting"],
+  },
+  {
+    name: "Mobile App Development",
+    slug: "mobile",
+    subs: ["iOS & Android Apps", "Cross-platform Development", "App UI/UX Design", "App Maintenance & Support"],
+  },
+  {
+    name: "Branding & UI/UX",
+    slug: "ux-design",
+    subs: ["Web-app Design", "Mobile Design", "Wireframing & Prototyping", "User Research", "UX Audit", "Ongoing Design Support"],
+  },
+  {
+    name: "Social Media Marketing",
+    slug: "social-media",
+    subs: ["Social Media Strategy", "Content Creation & Copywriting", "Community Management", "Paid Social Advertising", "Analytics & Reporting", "Influencer Marketing"],
+  },
 ];
 
 const menuVariants = {
@@ -44,82 +92,116 @@ const menuVariants = {
   },
 };
 
-const containerVariants = {
+const staggerContainer = {
   visible: {
     transition: {
-      staggerChildren: 0.1,
-      delayChildren: 0.2,
+      staggerChildren: 0.08,
+      delayChildren: 0.3,
     },
   },
 };
 
-const linkVariants = {
-  hidden: {
-    opacity: 0,
-    y: 50,
-  },
+const slideUp = {
+  hidden: { opacity: 0, y: 30 },
   visible: {
     opacity: 1,
     y: 0,
     transition: {
-      duration: 0.8,
+      duration: 0.6,
       ease: [0.25, 0.1, 0.25, 1],
     },
   },
-  exit: {
-    opacity: 0,
-    y: 50,
-    transition: {
-      duration: 0.4,
-    },
-  },
 };
 
-const parallaxContainerVariants = {
-  visible: {
-    transition: {
-      staggerChildren: 0.12,
-      delayChildren: 0.25,
-    },
-  },
-};
+const ServiceItem = ({ service, onNavigate }: { service: ServiceLink; onNavigate: (href: string) => void }) => {
+  const [open, setOpen] = useState(false);
 
-const parallaxItemVariants = {
-  hidden: {
-    opacity: 0,
-    y: 200,
-    rotate: -10,
-    scale: 0.8,
-  },
-  visible: {
-    opacity: 1,
-    y: 0,
-    rotate: 0,
-    scale: 1,
-    transition: {
-      duration: 1.2,
-      ease: [0.25, 0.1, 0.25, 1] as const,
-      type: "spring" as const,
-      stiffness: 50,
-      damping: 15,
-    },
-  },
+  return (
+    <div>
+      <div className="flex items-center gap-2 py-1.5">
+        <a
+          href={`/services/${service.slug}`}
+          onClick={(e) => {
+            e.preventDefault();
+            onNavigate(`/services/${service.slug}`);
+          }}
+          className="text-[15px] text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+        >
+          {service.name}
+        </a>
+        <button
+          onMouseEnter={() => setOpen(true)}
+          onClick={() => setOpen(!open)}
+          className="text-muted-foreground/40 hover:text-foreground transition-colors"
+        >
+          <ChevronRight
+            size={13}
+            className={`transition-transform duration-200 ${open ? "rotate-90" : ""}`}
+          />
+        </button>
+      </div>
+
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2, ease: [0.25, 0.1, 0.25, 1] }}
+            className="overflow-hidden"
+            onMouseLeave={() => setOpen(false)}
+          >
+            <div className="pl-4 pb-2 space-y-1">
+              {service.subs.map((sub, i) => (
+                <a
+                  key={sub}
+                  href={`/services/${service.slug}`}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    onNavigate(`/services/${service.slug}`);
+                  }}
+                  className="flex items-baseline gap-2 text-xs text-muted-foreground/50 hover:text-foreground/80 transition-colors cursor-pointer"
+                >
+                  <span className="text-[10px] text-accent/40 font-mono">/{String(i + 1).padStart(2, "0")}</span>
+                  <span>{sub}</span>
+                </a>
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
 };
 
 export const NavbarMenuIcon = () => {
   const [isOpen, setIsOpen] = useState(false);
   const { scrollY } = useScroll();
   const headerOpacity = useTransform(scrollY, [0, 100], [0, 1]);
-  const smoothOpacity = useSpring(headerOpacity, {
-    stiffness: 100,
-    damping: 20,
-  });
-
   const logoTextOpacity = useTransform(scrollY, [100, 250], [0, 1]);
   const logoTextY = useTransform(scrollY, [100, 250], [20, 0]);
   const menuRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const location = useLocation();
+
+  // Logo hover-reveal effect (only active in hero zone)
+  const logoRef = useRef<HTMLDivElement>(null);
+  const [logoHovered, setLogoHovered] = useState(false);
+  const [inHeroZone, setInHeroZone] = useState(true);
+
+  // Track whether we're in the hero section — only setState when value actually changes
+  useEffect(() => {
+    let prev = true;
+    return scrollY.on("change", (v) => {
+      const next = v < 100;
+      if (next !== prev) {
+        prev = next;
+        setInHeroZone(next);
+      }
+    });
+  }, [scrollY]);
+
+  const logoRevealActive = inHeroZone && logoHovered;
 
   // Close menu on route change
   useEffect(() => {
@@ -137,17 +219,7 @@ export const NavbarMenuIcon = () => {
     }
   }, [isOpen]);
 
-  // Prevent scroll when menu is open
-  useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "unset";
-    }
-    return () => {
-      document.body.style.overflow = "unset";
-    };
-  }, [isOpen]);
+  // Page stays scrollable when menu is open — no overflow lock
 
   const handleNavClick = (href: string) => {
     setIsOpen(false);
@@ -168,79 +240,120 @@ export const NavbarMenuIcon = () => {
 
   return (
     <>
-      {/* Background blur on scroll */}
+      {/* Background fade on scroll — no backdropFilter (causes full repaint every scroll tick) */}
       <motion.div
         className="fixed top-0 left-0 right-0 h-24 z-40 pointer-events-none"
         style={{
-          opacity: smoothOpacity,
+          opacity: headerOpacity,
           background:
-            "linear-gradient(to bottom, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0) 100%)",
-          backdropFilter: "blur(10px)",
+            "linear-gradient(to bottom, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0) 100%)",
         }}
       />
 
       {/* Header */}
       <header className="fixed top-0 left-0 right-0 z-50">
-        <nav className="section-padding py-6 flex items-center justify-between max-w-[1800px] mx-auto w-full">
-          {/* Logo */}
+        <nav className="px-4 md:px-8 lg:px-16 xl:px-20 py-6 flex items-center justify-between max-w-[1800px] mx-auto w-full">
+          {/* Logo with hover-reveal in hero zone */}
           <motion.div
-            className="flex items-center gap-1 z-[100] relative cursor-pointer select-none "
+            ref={logoRef}
+            className="flex items-center gap-1 z-[100] relative select-none"
+            style={{ cursor: logoRevealActive ? "none" : "pointer" }}
             initial={{ opacity: 0, x: -30 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8, ease: [0.25, 0.1, 0.25, 1] }}
-            onClick={() => {
-              navigate("/");
-            }}
+            onClick={() => navigate("/")}
+            onMouseEnter={() => setLogoHovered(true)}
+            onMouseLeave={() => setLogoHovered(false)}
+            data-cursor-hide={inHeroZone || undefined}
           >
-            <img src="/logo.png" alt="Forrof Logo" title="Forrof" className="w-9 h-9 dark:hidden" />
-            <img src="/logo-white.png" alt="Forrof Logo" title="Forrof" className="w-9 h-9 hidden dark:block" />
-            <motion.span
-              className="text-3xl font-bold tracking-tight inline-block"
-              style={{ opacity: logoTextOpacity, y: logoTextY }}
-            >
-              &nbsp;forrof.io
-            </motion.span>
+            {/* Invisible expanded hitbox so hovering the text area also triggers reveal */}
+            {inHeroZone && (
+              <div
+                className="absolute inset-0 pointer-events-auto"
+                style={{ right: "-180px" }}
+              />
+            )}
+            <img src="/logo-white.png" alt="Forrof Logo" title="Forrof" className="w-9 h-9 relative z-10" />
+
+            {/* Hero zone: hover-reveal text */}
+            {inHeroZone ? (
+              <AnimatePresence>
+                {logoHovered && (
+                  <motion.span
+                    className="text-3xl font-bold tracking-tight inline-block relative z-10 whitespace-nowrap"
+                    initial={{ opacity: 0, x: -10, filter: "blur(8px)" }}
+                    animate={{ opacity: 1, x: 0, filter: "blur(0px)" }}
+                    exit={{ opacity: 0, x: -10, filter: "blur(8px)" }}
+                    transition={{ duration: 0.35, ease: [0.25, 0.1, 0.25, 1] }}
+                  >
+                    &nbsp;forrof.io
+                  </motion.span>
+                )}
+              </AnimatePresence>
+            ) : (
+              /* Scrolled past hero: normal scroll-based reveal */
+              <motion.span
+                className="text-3xl font-bold tracking-tight inline-block relative z-10"
+                style={{ opacity: logoTextOpacity, y: logoTextY }}
+              >
+                &nbsp;forrof.io
+              </motion.span>
+            )}
           </motion.div>
 
-          {/* Menu Actions */}
-          <div className="flex items-center gap-1 md:gap-4">
-            {/* Theme Toggle - Left of Music Player */}
-            <Magnetic strength={0.2}>
-              <ThemeToggle />
-            </Magnetic>
-            {/* Music Player - Right of Menu */}
+
+
+          {/* Right Actions */}
+          <div className="flex items-center gap-2 md:gap-4 z-[100]">
+            {/* Let's Talk */}
+            <motion.a
+              href="/contact"
+              onClick={(e) => {
+                e.preventDefault();
+                navigate("/contact");
+                window.scrollTo(0, 0);
+              }}
+              className="hidden md:inline-flex items-center gap-1.5 text-sm font-medium text-foreground hover:text-foreground/70 transition-colors cursor-pointer border-b border-foreground/30 pb-0.5"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.4 }}
+              whileHover={{ y: -1 }}
+            >
+              Let's talk
+              <svg width="12" height="12" viewBox="0 0 14 14" fill="none">
+                <path d="M1 13L13 1M13 1H3M13 1V11" stroke="#48f0e7" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </motion.a>
+
+            <span className="hidden md:block w-px h-5 bg-foreground/20 mx-1" />
+
+            {/* Music Player */}
             <Magnetic strength={0.2}>
               <MusicPlayer />
             </Magnetic>
+
+            {/* Menu Button */}
             <Magnetic strength={0.2}>
               <motion.button
-                className="relative w-12 h-12 flex items-center justify-center rounded-full border border-foreground/10 hover:border-foreground/30 transition-colors bg-background/50 backdrop-blur-sm"
+                className="relative w-12 h-12 flex items-center justify-center cursor-pointer"
                 onClick={() => setIsOpen(!isOpen)}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 aria-label={isOpen ? "Close navigation menu" : "Open navigation menu"}
                 aria-expanded={isOpen}
               >
-                <motion.div
-                  className="absolute inset-0 bg-foreground/5 rounded-full"
-                  initial={{ scale: 0 }}
-                  whileHover={{ scale: 1 }}
-                  transition={{ duration: 0.3 }}
-                />
                 <AnimatePresence mode="wait">
                   {!isOpen ? (
                     <motion.div
                       key="menu"
-                      initial={{ opacity: 0, rotate: -90, scale: 0.5 }}
-                      animate={{ opacity: 1, rotate: 0, scale: 1 }}
-                      exit={{ opacity: 0, rotate: 90, scale: 0.5 }}
-                      transition={{ duration: 0.4 }}
+                      className="flex flex-col items-end gap-[7px]"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.3 }}
                     >
-                      <Ellipsis
-                        size={30}
-                        strokeWidth={3}
-                        className="relative z-10 font-extrabold"
-                      />
+                      <motion.span className="block w-8 h-[2.5px] bg-foreground rounded-full" />
+                      <motion.span className="block w-6 h-[2.5px] bg-foreground rounded-full" />
                     </motion.div>
                   ) : (
                     <motion.div
@@ -256,193 +369,177 @@ export const NavbarMenuIcon = () => {
                 </AnimatePresence>
               </motion.button>
             </Magnetic>
-
-
           </div>
         </nav>
       </header>
 
-      {/* Full Screen Menu */}
+      {/* Menu Overlay — floating card over blurred backdrop */}
       <AnimatePresence>
         {isOpen && (
-          <motion.div
-            ref={menuRef}
-            className="fixed inset-0 z-40 bg-background"
-            variants={menuVariants}
-            initial="hidden"
-            animate="visible"
-            exit="exit"
-          >
-            {/* Background animated gradient with parallax */}
+          <>
+            {/* Layer 1: Transparent backdrop — pointer-events-none so page scrolls behind */}
             <motion.div
-              className="absolute inset-0 overflow-hidden"
-              initial={{ opacity: 0, y: 100 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, ease: [0.25, 0.1, 0.25, 1] }}
-            >
-              <motion.div
-                className="absolute top-0 right-0 w-[500px] h-[500px] bg-foreground/5 rounded-full blur-3xl"
-                animate={{
-                  x: [0, 100, 0],
-                  y: [200, 50, 200],
-                }}
-                transition={{
-                  duration: 8,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                }}
-              />
-              <motion.div
-                className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-foreground/5 rounded-full blur-3xl"
-                animate={{
-                  x: [0, -50, 0],
-                  y: [0, 100, 0],
-                }}
-                transition={{
-                  duration: 10,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                }}
-              />
-              {/* Extra parallax layers */}
-              <motion.div
-                className="absolute top-1/2 left-1/4 w-[300px] h-[300px] bg-foreground/3 rounded-full blur-3xl"
-                animate={{
-                  x: [50, -50, 50],
-                  y: [-100, 100, -100],
-                  scale: [0.8, 1.2, 0.8],
-                }}
-                transition={{
-                  duration: 12,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                }}
-              />
-              <motion.div
-                className="absolute -top-32 right-1/3 w-[350px] h-[350px] bg-foreground/4 rounded-full blur-3xl"
-                animate={{
-                  x: [-100, 50, -100],
-                  y: [100, -100, 100],
-                  scale: [1, 0.7, 1],
-                }}
-                transition={{
-                  duration: 15,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                }}
-              />
-            </motion.div>
+              className="fixed inset-0 z-40 pointer-events-none"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.4 }}
+              style={{ background: "rgba(0, 0, 0, 0.15)" }}
+            />
 
-            {/* Menu Content with enhanced parallax */}
+            {/* Layer 2: Floating glass card */}
             <motion.div
-              className="relative z-10 h-full flex flex-col items-center justify-center section-padding"
-              variants={parallaxContainerVariants}
-              initial="hidden"
-              animate="visible"
+              ref={menuRef}
+              className="fixed z-40 left-4 right-4 bottom-4 md:left-6 md:right-6 md:bottom-6 lg:left-10 lg:right-10 lg:bottom-8 top-[5.5rem] md:top-[6rem] rounded-2xl md:rounded-3xl overflow-hidden"
+              initial={{ opacity: 0, y: 30, scale: 0.97 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 20, scale: 0.98 }}
+              transition={{ duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
             >
-              {/* Navigation Links with individual parallax */}
-              <div className="space-y-8 md:space-y-12 text-center z-50">
-                {navLinks.map((link, index) => (
-                  <motion.div
-                    key={link.name}
-                    variants={parallaxItemVariants}
-                    whileHover={{
-                      scale: 1.08,
-                      rotate: 3,
-                      x: 20,
-                    }}
-                    transition={{
-                      type: "spring",
-                      stiffness: 250,
-                      damping: 15,
-                    }}
-                    className="relative"
-                  >
-                    <motion.div
-                      className="absolute -inset-8 bg-foreground/5 rounded-lg blur-2xl"
-                      initial={{ opacity: 0, scale: 0.8 }}
-                      whileHover={{ opacity: 1, scale: 1.2 }}
-                      transition={{ duration: 0.3 }}
-                    />
-                    <motion.a
-                      href={link.href}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        handleNavClick(link.href);
-                      }}
-                      className="text-6xl md:text-8xl font-bold text-foreground hover:text-foreground/70 transition-colors duration-300 cursor-pointer block relative group"
-                    >
-                      <motion.span
-                        className="absolute -left-12 md:-left-16 text-foreground/20 opacity-0 group-hover:opacity-100"
-                        initial={{ x: 0, opacity: 0 }}
-                        whileHover={{ x: -30, opacity: 1 }}
-                        transition={{
-                          duration: 0.4,
-                          type: "spring",
-                          stiffness: 200,
-                        }}
-                      >
-                        ↗
-                      </motion.span>
-                      <motion.span
-                        className="inline-block"
-                        animate={{
-                          y: [0, -5, 0],
-                        }}
-                        transition={{
-                          duration: 3,
-                          repeat: Infinity,
-                          delay: index * 0.2,
-                        }}
-                      >
-                        {link.name}
-                      </motion.span>
-                      <motion.span
-                        className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-foreground to-foreground/50 origin-left rounded-full"
-                        initial={{ scaleX: 0 }}
-                        whileHover={{ scaleX: 1 }}
-                        transition={{
-                          duration: 0.5,
-                          ease: [0.25, 0.1, 0.25, 1],
-                        }}
-                      />
-                    </motion.a>
-                  </motion.div>
-                ))}
+              {/* Glass background */}
+              <div className="absolute inset-0 backdrop-blur-2xl bg-background/60" />
+              <div className="absolute inset-0 border border-foreground/[0.06] rounded-2xl md:rounded-3xl pointer-events-none" />
+              <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                <div className="absolute -bottom-20 -left-20 w-[500px] h-[500px] bg-accent/5 rounded-full blur-[100px]" />
+                <div className="absolute top-0 right-0 w-[300px] h-[300px] bg-accent/3 rounded-full blur-[80px]" />
               </div>
 
-              {/* Footer Info with parallax */}
+              {/* Card content */}
               <motion.div
-                className="absolute bottom-0 left-0 right-0 section-padding py-12"
-                initial={{ opacity: 0, y: 100 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{
-                  duration: 1,
-                  delay: 0.6,
-                  ease: [0.25, 0.1, 0.25, 1],
-                }}
+                className="relative z-10 h-full flex flex-col px-6 md:px-12 lg:px-16 pt-10 md:pt-14 pb-6 overflow-y-auto"
+                variants={staggerContainer}
+                initial="hidden"
+                animate="visible"
               >
+                {/* 3-column content */}
+                <div className="flex-1 grid grid-cols-1 lg:grid-cols-[1fr_0.8fr_1.2fr] gap-10 lg:gap-8 items-start">
+
+                  {/* Left — Connect info */}
+                  <motion.div variants={slideUp} className="flex flex-col justify-between h-full">
+                    <div>
+                      <div className="flex items-center gap-2 mb-6">
+                        <span className="w-2 h-2 rounded-full bg-accent" />
+                        <span className="text-sm text-accent font-medium">Connect with us!</span>
+                      </div>
+                      <h2 className="text-3xl md:text-4xl lg:text-[2.8rem] font-bold leading-[1.1] tracking-tight mb-8">
+                        Turn Your Vision Into an Experience That Lasts
+                      </h2>
+                      <div className="w-10 h-px bg-foreground/20 mb-6" />
+                      <a
+                        href="mailto:hello@forrof.io"
+                        className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors text-sm mb-8"
+                      >
+                        <Mail size={15} />
+                        hello@forrof.io
+                      </a>
+                    </div>
+                    <motion.a
+                      href="/contact"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        handleNavClick("/contact");
+                      }}
+                      className="inline-flex items-center gap-2 bg-foreground text-background px-7 py-3.5 rounded-full text-xs font-semibold uppercase tracking-wider hover:opacity-90 transition-opacity w-fit"
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      Let's Talk
+                      <svg width="12" height="12" viewBox="0 0 14 14" fill="none" className="ml-1">
+                        <path d="M1 13L13 1M13 1H3M13 1V11" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    </motion.a>
+                  </motion.div>
+
+                  {/* Middle — Navigation */}
+                  <motion.div variants={slideUp}>
+                    <div className="mb-5 pb-3 border-b border-foreground/10">
+                      <span className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Navigation</span>
+                    </div>
+                    <nav className="space-y-0.5">
+                      {navLinks.map((link, index) => (
+                        <motion.a
+                          key={link.name}
+                          href={link.href}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            handleNavClick(link.href);
+                          }}
+                          className={`block py-2 text-lg md:text-xl font-medium transition-colors duration-300 cursor-pointer ${
+                            location.pathname === link.href
+                              ? "text-foreground"
+                              : "text-muted-foreground hover:text-foreground"
+                          }`}
+                          initial={{ opacity: 0, y: 15 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.3 + index * 0.05 }}
+                        >
+                          <span className="flex items-center gap-3">
+                            {location.pathname === link.href && (
+                              <span className="w-1.5 h-1.5 rounded-full bg-accent" />
+                            )}
+                            {link.name}
+                          </span>
+                        </motion.a>
+                      ))}
+                    </nav>
+                  </motion.div>
+
+                  {/* Right — Services with expandable sub-items */}
+                  <motion.div variants={slideUp} className="overflow-y-auto max-h-full pr-2">
+                    <div className="mb-5 pb-3 border-b border-foreground/10">
+                      <span className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Services</span>
+                    </div>
+                    <div className="space-y-0.5">
+                      {serviceLinks.map((service) => (
+                        <ServiceItem key={service.slug} service={service} onNavigate={handleNavClick} />
+                      ))}
+                    </div>
+                  </motion.div>
+                </div>
+
+                {/* Bottom bar */}
                 <motion.div
-                  animate={{
-                    y: [0, -3, 0],
-                  }}
-                  transition={{
-                    duration: 4,
-                    repeat: Infinity,
-                    ease: "easeInOut",
-                  }}
+                  className="pt-5 border-t border-foreground/10 mt-6"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.6 }}
                 >
-                  <motion.a
-                    href="mailto:hello@forrof.io"
-                    className="text-sm text-muted-foreground hover:text-foreground transition-colors duration-300"
-                    whileHover={{ x: 10 }}
-                  >
-                    hello@forrof.io
-                  </motion.a>
+                  <div className="flex flex-col md:flex-row justify-between items-center gap-3">
+                    <p className="text-xs text-muted-foreground">
+                      © {new Date().getFullYear()} Forrof. All rights reserved.
+                    </p>
+                    <div className="flex items-center gap-4">
+                      {[
+                        { name: "TikTok", url: SOCIAL_LINKS.tiktok },
+                        { name: "Instagram", url: SOCIAL_LINKS.instagram },
+                        { name: "X", url: SOCIAL_LINKS.twitter },
+                        { name: "LinkedIn", url: SOCIAL_LINKS.linkedin },
+                      ].map((social) => (
+                        <a
+                          key={social.name}
+                          href={social.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          aria-label={`Follow Forrof on ${social.name}`}
+                          className="w-8 h-8 rounded-full border border-foreground/10 flex items-center justify-center text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-colors text-[10px]"
+                        >
+                          {social.name[0]}
+                        </a>
+                      ))}
+                    </div>
+                    <div className="flex gap-5">
+                      <a href="/privacy-policy" onClick={(e) => { e.preventDefault(); handleNavClick("/privacy-policy"); }} className="text-xs text-muted-foreground hover:text-foreground transition-colors">
+                        Privacy Policy
+                      </a>
+                      <a href="/terms-and-policy" onClick={(e) => { e.preventDefault(); handleNavClick("/terms-and-policy"); }} className="text-xs text-muted-foreground hover:text-foreground transition-colors">
+                        Terms Of Use
+                      </a>
+                    </div>
+                  </div>
                 </motion.div>
               </motion.div>
             </motion.div>
-          </motion.div>
+          </>
         )}
       </AnimatePresence>
     </>

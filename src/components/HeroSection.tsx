@@ -1,99 +1,118 @@
-import { motion, useScroll, useTransform, useSpring } from "framer-motion";
-import { useRef, useEffect, useState, Suspense, lazy } from "react";
-import { Magnetic, LineReveal } from "./AnimationComponents";
+import { motion } from "framer-motion";
+import { useRef, useMemo, Suspense, lazy, useEffect, useState } from "react";
+import { ArrowUpRight } from "lucide-react";
+import { LineReveal } from "./AnimationComponents";
 const HeroGlobe = lazy(() => import("./HeroGlobe"));
 
-const categories = [
-  "AI Products & SaaS Platforms",
-  "Intelligent Business Systems",
-  "Automation & AI Integrations",
-  "Product Engineering & Architecture",
-];
+const generateStars = (count: number) =>
+  Array.from({ length: count }, (_, i) => {
+    const seq = i % 3;
+    const idx = Math.floor(i / 3);
+    const x = seq === 0
+      ? (idx * 137.508 + 23.7) % 100
+      : seq === 1
+        ? (idx * 173.21 + 61.4) % 100
+        : (idx * 97.361 + 8.9) % 100;
+    const y = seq === 0
+      ? (idx * 97.361 + 41.2) % 100
+      : seq === 1
+        ? (idx * 137.508 + 77.3) % 100
+        : (idx * 211.73 + 15.6) % 100;
+    return {
+      id: i,
+      x,
+      y,
+      delay: (i * 0.31) % 4,
+      duration: 1.5 + (i * 0.19) % 5,
+      size: i % 17 === 0 ? 3 : i % 7 === 0 ? 2.5 : i % 3 === 0 ? 1.5 : 1,
+      opacity: i % 11 === 0 ? 0.9 : i % 5 === 0 ? 0.7 : 0.4,
+    };
+  });
 
 export const HeroSection = () => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const { scrollYProgress } = useScroll({
-    target: containerRef,
-    offset: ["start start", "end start"],
-  });
+  const contentRef = useRef<HTMLDivElement>(null);
+  const globeRef = useRef<HTMLDivElement>(null);
 
-  // Smooth spring physics for parallax
-  const smoothProgress = useSpring(scrollYProgress, {
-    stiffness: 50,
-    damping: 20,
-  });
-
-  // Parallax transforms
-  const earthOpacity = useTransform(smoothProgress, [0, 0.5], [1, 0]);
-
-  // Text animations to move to header
-  // Moves up, scales down significantly to match header size
-  const heroTextY = useTransform(smoothProgress, [0, 0.25], ["0vh", "-42vh"]);
-  const heroTextScale = useTransform(smoothProgress, [0, 0.25], [1, 0.15]); // Adjust scale to match ~30px / ~14vw
-  const heroTextOpacity = useTransform(smoothProgress, [0.15, 0.25], [1, 0]); // Fade out as it reaches top
-
-  // Twinkling stars effect
-  const [stars, setStars] = useState<
-    Array<{ id: number; x: number; y: number; delay: number; duration: number }>
-  >([]);
-
+  // Native scroll parallax — no Framer Motion useScroll, no React re-renders.
+  // Completely stops processing once the hero section scrolls fully off-screen.
   useEffect(() => {
-    const generatedStars = [...Array(100)].map((_, i) => ({
-      id: i,
-      x: Math.random() * 100,
-      y: Math.random() * 100,
-      delay: Math.random() * 3,
-      duration: 2 + Math.random() * 4,
-    }));
-    setStars(generatedStars);
+    const container = containerRef.current;
+    const content = contentRef.current;
+    const globe = globeRef.current;
+    if (!container || !content || !globe) return;
+
+    let rafId = 0;
+    let done = false; // tracks if hero already fully hidden
+
+    const onScroll = () => {
+      cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(() => {
+        const rect = container.getBoundingClientRect();
+        const h = container.offsetHeight;
+        if (rect.bottom < 0) {
+          // Hero is fully above viewport — apply final state and stop processing
+          if (!done) {
+            content.style.transform = `translate3d(0, -80px, 0)`;
+            content.style.opacity = "0";
+            globe.style.opacity = "0";
+            done = true;
+          }
+          return;
+        }
+        done = false;
+        const progress = Math.min(1, Math.max(0, -rect.top / h));
+        const textY = progress * -80;
+        const textOpacity = Math.max(0, 1 - progress / 0.35);
+        const earthOpacity = Math.max(0, 1 - progress / 0.5);
+        content.style.transform = `translate3d(0, ${textY}px, 0)`;
+        content.style.opacity = String(textOpacity);
+        globe.style.opacity = String(earthOpacity);
+      });
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => { window.removeEventListener("scroll", onScroll); cancelAnimationFrame(rafId); };
   }, []);
+
+  const starCount = window.innerWidth < 768 ? 20 : 40;
+  const stars = useMemo(() => generateStars(starCount), [starCount]);
 
   return (
     <section
       id="home"
       ref={containerRef}
-      className="relative min-h-[100vh] flex items-center overflow-hidden bg-background"
+      className="relative h-[100vh] flex items-end overflow-hidden bg-background"
+      data-no-cursor-light
     >
-      {/* Twinkling Stars Background */}
-      <div className="absolute inset-0 z-[1]">
-        {stars.map((star) => (
-          <motion.div
-            key={star.id}
-            className="absolute rounded-full"
+      {/* Twinkling Stars */}
+      <div className="absolute inset-0 z-[1] pointer-events-none">
+        {stars.map((s) => (
+          <div
+            key={s.id}
+            className="star"
             style={{
-              left: `${star.x}%`,
-              top: `${star.y}%`,
-              width: "2px",
-              height: "2px",
-              background: "#ffffff",
-            }}
-            animate={{
-              opacity: [0.3, 1, 0.3],
-              scale: [1, 1.5, 1],
-            }}
-            transition={{
-              duration: star.duration,
-              repeat: Infinity,
-              delay: star.delay,
-            }}
+              left: `${s.x}%`,
+              top: `${s.y}%`,
+              width: `${s.size}px`,
+              height: `${s.size}px`,
+              "--d": `${s.duration}s`,
+              "--delay": `-${s.delay}s`,
+              "--base-o": `${s.opacity}`,
+            } as React.CSSProperties}
           />
         ))}
       </div>
 
-      {/* Gradient Overlay - Deep blue gradient from black to dark blue */}
+      {/* Background gradient */}
       <motion.div
-        className="absolute inset-0 z-0 bg-[linear-gradient(to_bottom_left,#298ECD,#000)] dark:bg-[linear-gradient(to_bottom_left,rgba(0,0,0,0.3),rgba(10,30,70,0.7))] pointer-events-none"
+        className="absolute inset-0 z-0 pointer-events-none"
+        style={{ background: "radial-gradient(ellipse 25% 50% at 100% 50%, rgba(18,107,102,0.08) 0%, transparent 60%), #000" }}
       />
 
-      {/* 3D Earth Globe with Parallax */}
-      <motion.div
+      {/* 3D Earth Globe */}
+      <div
+        ref={globeRef}
         className="absolute -left-[20%] md:-left-[40%] top-[70%] md:top-[130%] -translate-y-[60%] z-10 w-[100vw] md:w-[80vw] lg:w-[80vw] aspect-square pointer-events-auto"
-        style={{
-          opacity: earthOpacity,
-          willChange: "transform"
-
-          // scale: earthScale,
-        }}
       >
         <Suspense
           fallback={
@@ -114,22 +133,24 @@ export const HeroSection = () => {
         >
           <HeroGlobe className="w-[120vw] h-full" />
         </Suspense>
-      </motion.div>
+      </div>
 
       {/* Main Content */}
-      <motion.div
-        className="relative z-20 section-padding w-full"
+      <div
+        ref={contentRef}
+        className="relative z-20 px-4 md:px-8 lg:px-16 xl:px-20 w-full h-full flex flex-col justify-between pt-[18vh] pb-[6vh] md:pb-[8vh]"
       >
-        <div className="max-w-[1800px] mx-auto max-[1500px]:mt-28 ">
-          {/* Top Label */}
+        {/* Top — /01 label + heading + subtitle + CTA */}
+        <div className="max-w-[1800px] mx-auto w-full">
+          {/* /01 Section Label */}
           <motion.div
-            className="flex items-center gap-4 mb-8 mt-28"
-            initial={{ opacity: 0, y: 30 }}
+            className="flex items-center gap-4 mb-8"
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1.2, ease: [0.25, 0.1, 0.25, 1] }}
+            transition={{ duration: 1, ease: [0.25, 0.1, 0.25, 1] }}
           >
             <motion.span
-              className="number-label text-white"
+              className="text-sm font-mono text-white/40 tracking-wider"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.5 }}
@@ -137,124 +158,105 @@ export const HeroSection = () => {
               /01
             </motion.span>
             <LineReveal
-              className="h-px bg-border flex-1 max-w-[100px]"
+              className="h-px bg-gradient-to-r from-white/30 to-transparent flex-1 max-w-[140px]"
               delay={0.6}
             />
             <motion.span
-              className="text-xs text-white uppercase tracking-widest"
-              initial={{ opacity: 0, x: -20 }}
+              className="text-[11px] text-white/40 uppercase tracking-[0.25em] font-light"
+              initial={{ opacity: 0, x: -15 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.8 }}
             >
-              Space of Intelligent Products & Business Systems
+              Space of Intelligent AI Products & Business Systems
             </motion.span>
           </motion.div>
 
-          {/* Main Logo Typography */}
           <motion.div
-            className="overflow-hidden mb-6"
-            style={{
-              background: "transparent",
-              y: heroTextY,
-              scale: heroTextScale,
-              opacity: heroTextOpacity,
-              transformOrigin: "left center"
-            }}
+            className="flex-shrink-0"
           >
             <motion.h1
-              className="text-[18vw] md:text-[14vw] font-bold leading-[0.85] tracking-tighter text-white"
-              initial={{ y: "120%" }}
-              animate={{ y: 0 }}
-              transition={{
-                duration: 1.4,
-                ease: [0.25, 0.1, 0.25, 1],
-                delay: 0.3,
-              }}
+              className="text-[11vw] md:text-[6.5vw] lg:text-[4.5vw] font-bold leading-[1.05] tracking-[-0.03em]"
+              initial={{ opacity: 0, y: 50 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 1.2, ease: [0.25, 0.1, 0.25, 1], delay: 0.3 }}
             >
-              forrof
+              <span className="text-white">
+                Building Intelligent Software.
+              </span>
+              <br />
+              <span className="text-transparent bg-clip-text" style={{ backgroundImage: "linear-gradient(135deg, #ffffff 0%, #48f0e7 40%, #00d4aa 70%, #126b66 100%)" }}>
+                for the AI Era.
+              </span>
             </motion.h1>
+
+            <motion.p
+              className="text-sm text-white/70 font-normal mt-5 max-w-[440px] leading-[1.8]"
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.9, duration: 0.8 }}
+            >
+              We design and build custom software, AI systems, and digital platforms for companies worldwide — helping businesses scale with modern, future‑ready technology.
+            </motion.p>
+
+              <motion.a
+                href="/contact"
+                className="inline-flex items-center gap-3 px-10 py-4 rounded-full text-black font-semibold text-sm mt-8 cursor-pointer group relative overflow-hidden transition-all duration-700 ease-in-out hover:shadow-[0_0_30px_rgba(72,240,231,0.4),0_0_60px_rgba(72,240,231,0.15)] hover:scale-[1.04] active:scale-[0.97]"
+                style={{
+                  background: "linear-gradient(135deg, #48f0e7 0%, #00d4aa 40%, #126b66 70%, #0a3d3a 100%)",
+                }}
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 1.1, duration: 0.8 }}
+              >
+                Let's Talk
+                <ArrowUpRight size={16} className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform duration-700" />
+              </motion.a>
           </motion.div>
         </div>
 
-        {/* Subtitle */}
-        <motion.div
-          className="flex items-start gap-8 mb-16"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1 }}
-        >
-          <motion.span
-            className="text-sm text-white writing-vertical hidden md:block"
-            // style={{ writingMode: "vertical-rl", textOrientation: "mixed" }}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 1.2 }}
+        {/* Bottom-right — description + tags */}
+        <div className="max-w-[1800px] mx-auto w-full flex justify-end">
+          <motion.div
+            className="max-w-[400px] hidden xl:flex flex-col items-end gap-6 flex-shrink-0"
           >
-            AI‑First Product & Systems Studio
-          </motion.span>
-        </motion.div>
-
-        {/* Categories - Interactive List */}
-        <motion.div
-          className="flex flex-col gap-4 max-w-md"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1.2 }}
-        >
-          {categories.map((cat, index) => (
-            <Magnetic key={cat} strength={0.15}>
-              <motion.a
-                href="#services"
-                className="group flex items-center gap-4 py-1 cursor-pointer"
-                initial={{ opacity: 0, x: -30 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 1.3 + index * 0.1 }}
-                whileHover={{ x: 10 }}
-              >
-                <motion.span className="w-8 h-px bg-white group-hover:w-16 group-hover:bg-white transition-all duration-500" />
-                <span className="text-sm text-white group-hover:text-white transition-colors duration-500">
-                  {cat}
-                </span>
-              </motion.a>
-            </Magnetic>
-          ))}
-        </motion.div>
-
-        {/* Right side description */}
-        <motion.div
-          className="absolute right-0 bottom-[1%] -translate-y-1/2 max-w-[370px] hidden xl:block mr-10"
-          initial={{ opacity: 0, x: 50 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 1.5, duration: 1 }}
-        >
-          <div className="flex flex-col items-center gap-5">
-            <div className="">
-              <p className="text-lg text-white leading-tight" style={{ textAlign: "right" }}>
+            <motion.p
+              className="text-[15px] leading-[1.8] text-right font-light"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 1.2, duration: 1, ease: [0.25, 0.1, 0.25, 1] }}
+            >
+              <span className="text-white/90">
                 Whether through AI‑powered platforms, scalable product architectures, or intelligent automation systems,
-                <span className="font-extralight text-white/70">&nbsp;
-                  we design and build software that becomes a long‑term business asset, not just an app.
-                </span>
-              </p>
-            </div>
-            <div className="flex gap-3 -ml-10 justify-end" style={{ alignSelf: "flex-end" }} >
-              <span className="px-4 py-2 border border-white text-white rounded-full text-xs ">
-                Frontend
+              </span>{" "}
+              <span className="text-white/40">
+                we design and build software that becomes a long‑term business asset, not just an app.
               </span>
-              <span className="px-4 py-2 border border-white text-white rounded-full text-xs ">
-                Backend
-              </span>
-              <span className="px-4 py-2 border border-white text-white rounded-full text-xs ">
-                AI
-              </span>
-              <span className="px-5 py-1 border border-white text-white rounded-full text-base ">
+            </motion.p>
+            <div className="flex gap-3 flex-wrap justify-end">
+              {["AI", "ML", "SaaS"].map((tag, i) => (
+                <motion.span
+                  key={tag}
+                  className="px-5 py-2 border-2 border-[#48f0e7]/40 text-white/80 rounded-full text-[11px] uppercase tracking-[0.2em] hover:border-[#48f0e7]/70 hover:text-[#48f0e7] transition-colors duration-300"
+                  initial={{ opacity: 0, y: 15 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 1.5 + i * 0.1, duration: 0.6, ease: [0.25, 0.1, 0.25, 1] }}
+                >
+                  {tag}
+                </motion.span>
+              ))}
+              <motion.span
+                className="w-[34px] h-[34px] border-2 border-[#48f0e7]/40 text-white/80 rounded-full text-sm flex items-center justify-center hover:border-[#48f0e7]/70 hover:text-[#48f0e7] transition-colors duration-300"
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 1.8, duration: 0.6, ease: [0.25, 0.1, 0.25, 1] }}
+              >
                 +
-              </span>
+              </motion.span>
             </div>
-          </div>
-        </motion.div>
+          </motion.div>
+        </div>
+      </div>
 
-      </motion.div>
-
-    </section >
+    </section>
   );
 };

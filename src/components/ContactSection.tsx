@@ -1,9 +1,6 @@
 import {
   motion,
   useInView,
-  useScroll,
-  useTransform,
-  useSpring,
 } from "framer-motion";
 import { useRef, useState } from "react";
 import { Send, ArrowUpRight, Mail, Phone, MapPin } from "lucide-react";
@@ -23,22 +20,11 @@ export const ContactSection = () => {
   });
   const [focusedField, setFocusedField] = useState<string | null>(null);
 
-  const { scrollYProgress } = useScroll({
-    target: containerRef,
-    offset: ["start end", "end start"],
-  });
-
-  const smoothProgress = useSpring(scrollYProgress, {
-    stiffness: 50,
-    damping: 20,
-  });
-  const formY = useTransform(smoothProgress, [0, 1], [100, -50]);
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const form = e.target as HTMLFormElement;
     const data = new FormData(form);
-    data.append("access_key", "d1b142cc-769d-44c1-acd9-f483031796ea");
+    data.append("access_key", import.meta.env.VITE_WEB3FORMS_KEY);
     try {
       const response = await fetch("https://api.web3forms.com/submit", {
         method: "POST",
@@ -83,13 +69,13 @@ export const ContactSection = () => {
   return (
     <section
       id="contact"
-      className="section-padding md:py-20 py-20 relative overflow-hidden"
+      className="section-forced-light section-padding md:py-20 py-20 overflow-hidden"
       ref={containerRef}
     >
       <div className="max-w-[1800px] mx-auto">
         {/* Header */}
         <motion.div
-          className="flex items-center gap-4 mb-20"
+          className="flex items-center gap-4 mb-12"
           initial={{ opacity: 0, y: 30 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 1, ease: [0.25, 0.1, 0.25, 1] }}
@@ -114,7 +100,7 @@ export const ContactSection = () => {
           >
             <div className="overflow-hidden mb-8">
               <motion.h2
-                className="text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-bold leading-[0.95] pb-4"
+                className="text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold leading-[0.95] pb-4"
                 initial={{ y: "100%" }}
                 animate={isInView ? { y: 0 } : {}}
                 transition={{
@@ -332,24 +318,13 @@ export const ContactSection = () => {
               <Magnetic strength={0.1}>
                 <motion.button
                   type="submit"
-                  className="w-full flex items-center justify-center gap-3 py-6 bg-foreground text-background rounded-full font-medium overflow-hidden relative group"
-                  whileHover={{ scale: 1.02 }}
+                  className="w-full flex items-center justify-center gap-3 py-6 rounded-full font-medium text-white overflow-hidden relative group"
+                  style={{ background: "linear-gradient(135deg, #126b66, #00d4aa)" }}
+                  whileHover={{ scale: 1.03, boxShadow: "0 0 20px rgba(72, 240, 231, 0.5), 0 0 40px rgba(72, 240, 231, 0.25), 0 0 60px rgba(72, 240, 231, 0.1)" }}
                   whileTap={{ scale: 0.98 }}
                 >
-                  <motion.span
-                    className="absolute inset-0 bg-muted"
-                    initial={{ y: "100%" }}
-                    whileHover={{ y: 0 }}
-                    transition={{ duration: 0.4 }}
-                  />
-                  <span className="relative z-10">Send Message</span>
-                  <motion.div
-                    className="relative z-10"
-                    animate={{ x: [0, 5, 0] }}
-                    transition={{ repeat: Infinity, duration: 1.5 }}
-                  >
-                    <ArrowUpRight size={18} />
-                  </motion.div>
+                  <span className="relative z-10 font-medium">Send Message</span>
+                  <ArrowUpRight size={18} className="relative z-10" />
                 </motion.button>
               </Magnetic>
             </motion.div>

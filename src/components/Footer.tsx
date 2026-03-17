@@ -1,5 +1,4 @@
-import { motion, useScroll, useTransform, useSpring } from "framer-motion";
-import { useRef } from "react";
+import { motion } from "framer-motion";
 import {
   Twitter,
   Instagram,
@@ -9,105 +8,75 @@ import {
 } from "lucide-react";
 import { Magnetic, LineReveal } from "./AnimationComponents";
 import { useNavigate } from "react-router-dom";
+import { useRef, useCallback } from "react";
+import { SOCIAL_LINKS } from "@/constants/links";
 
 const footerLinks = {
-  services: ["Branding", "UI/UX Design", "Web Development", "Marketing", "SEO"],
+  services: ["AI/ML Development", "Enterprise Software", "SaaS Development", "MVP & POC", "Product Strategy", "Mobile App Development", "Branding & UI/UX", "Social Media Marketing"],
   company: [
     { name: "Projects", href: "/projects" },
     { name: "Articles", href: "/articles" },
     { name: "Careers", href: "/careers" },
     { name: "Contact", href: "/contact" }],
   social: [
-    { icon: Twitter, href: "https://x.com/forrof_io", label: "Twitter" },
-    { icon: Instagram, href: "https://instagram.com/forrof.io", label: "Instagram" },
-    { icon: Linkedin, href: "https://linkedin.com/company/forrof", label: "LinkedIn" },
+    { icon: Twitter, href: SOCIAL_LINKS.twitter, label: "Twitter" },
+    { icon: Instagram, href: SOCIAL_LINKS.instagram, label: "Instagram" },
+    { icon: Linkedin, href: SOCIAL_LINKS.linkedin, label: "LinkedIn" },
   ],
 };
 
 export const Footer = () => {
   const navigate = useNavigate();
-  const containerRef = useRef<HTMLDivElement>(null);
-  const { scrollYProgress } = useScroll({
-    target: containerRef,
-    offset: ["start end", "end end"],
-  });
+  const glowRef = useRef<HTMLDivElement>(null);
+  const h2Ref = useRef<HTMLHeadingElement>(null);
 
-  const smoothProgress = useSpring(scrollYProgress, {
-    stiffness: 50,
-    damping: 20,
-  });
-  const textY = useTransform(smoothProgress, [0, 1], [100, 0]);
-  const opacity = useTransform(smoothProgress, [0, 0.5], [0, 1]);
+  const handleGlowMove = useCallback((e: React.MouseEvent) => {
+    if (!glowRef.current || !h2Ref.current) return;
+    const rect = glowRef.current.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    h2Ref.current.style.backgroundImage = `radial-gradient(circle 300px at ${x}px ${y}px, #00d4aa 0%, rgba(18,107,102,0.4) 45%, rgba(255,255,255,0.05) 70%)`;
+  }, []);
 
-  // Enhanced parallax background animations - same as hero section
-  const backgroundY = useTransform(scrollYProgress, [0, 1], [0, 300]);
-  const backgroundScale = useTransform(scrollYProgress, [0, 0.5], [1, 1.2]);
+  const handleGlowEnter = useCallback(() => {
+    // gradient will be set by move handler
+  }, []);
+
+  const handleGlowLeave = useCallback(() => {
+    if (h2Ref.current) {
+      h2Ref.current.style.backgroundImage = 'linear-gradient(rgba(255,255,255,0.05), rgba(255,255,255,0.05))';
+    }
+  }, []);
 
   return (
-    <footer
-      className="section-padding md:py-20 max-md:pb-10 border-t border-border relative overflow-hidden"
-      ref={containerRef}
-    >
-      {/* Animated background gradient blobs - same as hero section */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <motion.div
-          className="absolute top-0 right-0 w-96 h-96 bg-foreground/5 rounded-full blur-3xl"
-          style={{
-            y: backgroundY,
-            scale: backgroundScale,
-          }}
-          animate={{
-            x: [0, 100, 0],
-            y: [0, -50, 0],
-          }}
-          transition={{
-            duration: 8,
-            repeat: Infinity,
-            ease: "easeInOut",
-          }}
-        />
-        <motion.div
-          className="absolute bottom-0 left-0 w-96 h-96 bg-foreground/5 rounded-full blur-3xl"
-          style={{
-            y: backgroundY,
-            scale: backgroundScale,
-          }}
-          animate={{
-            x: [0, -100, 0],
-            y: [0, 100, 0],
-          }}
-          transition={{
-            duration: 10,
-            repeat: Infinity,
-            ease: "easeInOut",
-          }}
-        />
-        <motion.div
-          className="absolute top-1/2 left-1/2 w-80 h-80 bg-foreground/3 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2"
-          style={{
-            scale: backgroundScale,
-          }}
-          animate={{
-            scale: [0.8, 1.2, 0.8],
-            opacity: [0.3, 0.6, 0.3],
-          }}
-          transition={{
-            duration: 6,
-            repeat: Infinity,
-            ease: "easeInOut",
-          }}
-        />
-      </div>
+    <footer className="section-forced-dark section-padding md:py-20 max-md:pb-10 border-t border-border overflow-hidden">
 
       <div className="max-w-[1800px] mx-auto relative z-10">
-        {/* Big Logo with Parallax */}
-        <motion.div className="mb-20 overflow-hidden" style={{ opacity }}>
-          <motion.h2
-            className="text-[15vw] font-bold leading-none tracking-tighter text-foreground/5"
-            style={{ y: textY }}
+        {/* Big Logo with cursor glow */}
+        <motion.div
+          ref={glowRef}
+          className="mb-12 relative cursor-default"
+          initial={{ opacity: 0, y: 40 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.8 }}
+          onMouseMove={handleGlowMove}
+          onMouseEnter={handleGlowEnter}
+          onMouseLeave={handleGlowLeave}
+        >
+          <h2
+            ref={h2Ref}
+            className="text-[15vw] font-bold leading-none tracking-tighter select-none hidden md:block overflow-hidden"
+            style={{
+              color: 'transparent',
+              backgroundImage: 'linear-gradient(rgba(255,255,255,0.05), rgba(255,255,255,0.05))',
+              WebkitBackgroundClip: 'text',
+              backgroundClip: 'text',
+              transition: 'none',
+            }}
           >
             Forrof
-          </motion.h2>
+          </h2>
         </motion.div>
 
         {/* Main Footer Content */}
@@ -130,8 +99,8 @@ export const Footer = () => {
               </motion.a>
             </Magnetic>
             <p className="text-muted-foreground max-w-md mb-8 leading-relaxed">
-              We are a creative design agency that makes brands unforgettable
-              through strategic design and digital innovation.
+              We engineer intelligent software products and business systems
+              that turn technology into a long‑term growth engine.
             </p>
             <div className="flex gap-4">
               {footerLinks.social.map((social, index) => (

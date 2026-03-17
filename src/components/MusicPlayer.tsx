@@ -61,7 +61,7 @@ export const MusicPlayer = () => {
 
     return (
         <motion.button
-            className="relative w-12 h-12 flex items-center justify-center rounded-full border border-foreground/10 hover:border-foreground/30 transition-colors bg-background/50 backdrop-blur-sm"
+            className="relative w-12 h-12 flex items-center justify-center rounded-full border border-foreground/10 hover:border-foreground/30 transition-colors bg-background/80"
             onClick={togglePlay}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}

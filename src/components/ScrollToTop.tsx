@@ -12,7 +12,7 @@ export const ScrollToTop = () => {
   useEffect(() => {
     if (location.hash) return;
     scrollToTop();
-  }, [location.pathname]);
+  }, [location.pathname, location.hash]);
 
   return null;
 };

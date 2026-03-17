@@ -3,16 +3,23 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
-import { lazy, Suspense, useRef } from "react";
+import { lazy, Suspense } from "react";
 import Index from "./pages/Index";
 import { Header } from "./components/Header";
 import { Footer } from "./components/Footer";
-import { CustomCursor } from "./components/CustomCursor";
 import { ScrollToTop } from "./components/ScrollToTop";
-import { motion, useScroll, useSpring } from "framer-motion";
 import { ProtectedRoute } from "./components/admin/ProtectedRoute";
+import { ErrorBoundary } from "./components/ErrorBoundary";
 
 const Services = lazy(() => import("./pages/Services"));
+const AiMlService = lazy(() => import("./pages/services/AiMlService"));
+const SaasService = lazy(() => import("./pages/services/SaasService"));
+const MvpService = lazy(() => import("./pages/services/MvpService"));
+const UxDesignService = lazy(() => import("./pages/services/UxDesignService"));
+const EnterpriseService = lazy(() => import("./pages/services/EnterpriseService"));
+const StrategyService = lazy(() => import("./pages/services/StrategyService"));
+const MobileAppService = lazy(() => import("./pages/services/MobileAppService"));
+const SocialMediaService = lazy(() => import("./pages/services/SocialMediaService"));
 const Projects = lazy(() => import("./pages/Projects"));
 const ProjectDetails = lazy(() => import("./pages/ProjectDetails"));
 const Articles = lazy(() => import("./pages/Articles"));
@@ -32,22 +39,32 @@ const AdminBlogs = lazy(() => import("./pages/admin/Blogs"));
 const queryClient = new QueryClient();
 
 // Content wrapper that handles layout for all pages
+// Pure CSS progress bar — zero JS on scroll, uses native scroll-driven animation
+const ProgressBar = () => (
+  <>
+    <style>{`
+      @supports (animation-timeline: scroll()) {
+        .scroll-progress {
+          position: fixed; top: 0; left: 0; right: 0; height: 3px;
+          background: hsl(var(--foreground));
+          transform-origin: left;
+          z-index: 100;
+          scale: 0 1;
+          animation: scroll-progress linear;
+          animation-timeline: scroll();
+        }
+        @keyframes scroll-progress { to { scale: 1 1; } }
+      }
+    `}</style>
+    <div className="scroll-progress" />
+  </>
+);
+
 const LayoutWrapper = ({ children }: { children: React.ReactNode }) => {
   const location = useLocation();
-  const containerRef = useRef<HTMLDivElement>(null);
-  const { scrollYProgress } = useScroll();
 
-  // Check if on project details page
   const isProjectDetails = location.pathname.startsWith("/project/");
-  // Check if admin page
   const isAdmin = location.pathname.startsWith("/admin");
-
-  // Progress bar
-  const scaleX = useSpring(scrollYProgress, {
-    stiffness: 100,
-    damping: 30,
-    restDelta: 0.001,
-  });
 
   if (isAdmin) {
     return (
@@ -60,26 +77,10 @@ const LayoutWrapper = ({ children }: { children: React.ReactNode }) => {
 
   
   return (
-    <div
-      ref={containerRef}
-      className="min-h-screen bg-background text-foreground overflow-x-hidden"
-    >
-      {/* Custom cursor */}
-      <CustomCursor />
-
-      {/* Progress bar */}
-      <motion.div
-        className="fixed top-0 left-0 right-0 h-1 bg-foreground origin-left z-[100]"
-        style={{ scaleX }}
-      />
-
-      {/* Header - show on all pages */}
+    <div className="min-h-screen bg-background text-foreground">
+      <ProgressBar />
       <Header />
-
-      {/* Page content */}
       {children}
-
-      {/* Footer - hide on project details page */}
       {!isProjectDetails && <Footer />}
     </div>
   );
@@ -90,6 +91,7 @@ import { ThemeProvider } from "./context/ThemeContext";
 import { CookieConsent } from "./components/CookieConsent";
 
 const App = () => (
+  <ErrorBoundary>
   <QueryClientProvider client={queryClient}>
     <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
       <TooltipProvider>
@@ -98,7 +100,14 @@ const App = () => (
         <CookieConsent />
         <BrowserRouter>
           <ScrollToTop />
-          <Suspense fallback={null}>
+          <Suspense fallback={
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-background">
+              <div className="flex items-center text-2xl font-bold tracking-tight text-foreground">
+                <img src="/logo-white.png" alt="" width={32} height={32} />
+                <span>&nbsp;forrof</span>
+              </div>
+            </div>
+          }>
           <Routes>
             <Route
               path="/"
@@ -116,6 +125,14 @@ const App = () => (
                 </LayoutWrapper>
               }
             />
+            <Route path="/services/ai-ml" element={<LayoutWrapper><AiMlService /></LayoutWrapper>} />
+            <Route path="/services/saas" element={<LayoutWrapper><SaasService /></LayoutWrapper>} />
+            <Route path="/services/mvp" element={<LayoutWrapper><MvpService /></LayoutWrapper>} />
+            <Route path="/services/ux-design" element={<LayoutWrapper><UxDesignService /></LayoutWrapper>} />
+            <Route path="/services/enterprise" element={<LayoutWrapper><EnterpriseService /></LayoutWrapper>} />
+            <Route path="/services/strategy" element={<LayoutWrapper><StrategyService /></LayoutWrapper>} />
+            <Route path="/services/mobile" element={<LayoutWrapper><MobileAppService /></LayoutWrapper>} />
+            <Route path="/services/social-media" element={<LayoutWrapper><SocialMediaService /></LayoutWrapper>} />
             <Route
               path="/projects"
               element={
@@ -253,6 +270,7 @@ const App = () => (
       </TooltipProvider>
     </ThemeProvider>
   </QueryClientProvider>
+  </ErrorBoundary>
 );
 
 export default App;

@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { api } from "@/services/api";
+import type { Job } from "@/types/api";
 import { usePageMetadata } from "@/hooks/usePageMetadata";
 import { ArrowLeft, Clock, Globe, ArrowUpRight, CheckCircle2, Upload } from "lucide-react";
 import { Magnetic, LineReveal } from "@/components/AnimationComponents";
@@ -18,7 +19,7 @@ const JobDetails = () => {
         queryKey: ['job', slug],
         queryFn: async () => {
             const allJobs = await api.jobs.getAll();
-            const foundJob = allJobs.find((j: any) => {
+            const foundJob = allJobs.find((j: Job) => {
                 const jobSlug = j.title.toLowerCase().replace(/ /g, '-');
                 return jobSlug === slug;
             });
@@ -51,7 +52,7 @@ const JobDetails = () => {
     });
 
     const applicationMutation = useMutation({
-        mutationFn: (data: any) => api.jobs.apply(data),
+        mutationFn: (data: FormData) => api.jobs.apply(data),
         onSuccess: () => {
             toast({
                 title: "Application Sent!",

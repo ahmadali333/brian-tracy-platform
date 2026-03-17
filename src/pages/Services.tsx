@@ -1,6 +1,6 @@
-import { motion, useInView, useScroll, useTransform, useSpring } from "framer-motion";
-import { useRef, useState, useEffect } from "react";
-import { ArrowUpRight, Zap, Brain, Layers, Rocket, Map, Paintbrush } from "lucide-react";
+import { motion, useInView, useScroll, useTransform } from "framer-motion";
+import { useRef, useState } from "react";
+import { ArrowUpRight, Zap, Brain, Layers, Rocket, Map, Palette, Smartphone, Megaphone } from "lucide-react";
 import { LineReveal, Magnetic } from "@/components/AnimationComponents";
 import { usePageMetadata } from "@/hooks/usePageMetadata";
 import { useLenis } from "@/hooks/useLenis";
@@ -9,57 +9,83 @@ import { useNavigate } from "react-router-dom";
 const services = [
   {
     number: "01",
-    title: "AI Products & SaaS Development",
+    title: "AI/ML Development",
     description:
-      "We design and build revenue‑ready AI products, SaaS platforms, and modern applications with strong technical foundations.",
-    tags: ["AI/ML", "SaaS", "Full-Stack", "APIs"],
-    icon: Brain,
-    size: "large",
+      "Real‑world AI systems — from document intelligence to custom agents and workflows — integrated directly into your business.",
+    tags: ["LLMs", "Agents", "Workflows", "RAG"],
+    icon: Zap,
+    slug: "ai-ml",
+    highlight: false,
   },
   {
     number: "02",
-    title: "AI Business Systems & Internal Tools",
+    title: "Enterprise Software",
     description:
-      "Intelligent internal platforms, dashboards, and automation systems that streamline operations and unlock growth.",
+      "Intelligent internal platforms, dashboards, and automation systems that streamline operations and unlock growth at scale.",
     tags: ["Dashboards", "Automation", "Internal Tools"],
     icon: Layers,
-    size: "small",
+    slug: "enterprise",
+    highlight: true,
   },
   {
     number: "03",
-    title: "AI Integrations, Agents & Automation",
+    title: "SaaS Development",
     description:
-      "Real‑world AI systems — from document intelligence to custom agents and workflows — integrated into your business.",
-    tags: ["LLMs", "Agents", "Workflows", "RAG"],
-    icon: Zap,
-    size: "small",
+      "Revenue‑ready AI products and SaaS platforms engineered for speed, security, and effortless scalability from day one.",
+    tags: ["AI/ML", "SaaS", "Full-Stack", "APIs"],
+    icon: Brain,
+    slug: "saas",
+    highlight: false,
   },
   {
     number: "04",
-    title: "MVP → Scalable Platform Engineering",
+    title: "MVP & POC Development",
     description:
-      "We help founders go from idea to production‑grade platform with scalable architecture and long‑term product vision.",
+      "From idea to production‑grade platform — lean MVPs and prototypes that prove your concept and attract investors fast.",
     tags: ["Architecture", "MVP", "Scaling", "DevOps"],
     icon: Rocket,
-    size: "large",
+    slug: "mvp",
+    highlight: false,
   },
   {
     number: "05",
     title: "Product Architecture & Technical Strategy",
     description:
-      "We partner with teams on system design, AI strategy, and engineering direction to reduce risk and build smarter.",
+      "System design, AI strategy, and engineering direction that reduces risk and enables smarter decisions at every stage.",
     tags: ["Strategy", "System Design", "CTO-as-a-Service"],
     icon: Map,
-    size: "small",
+    slug: "strategy",
+    highlight: false,
   },
   {
     number: "06",
-    title: "Product Design, UX & Growth Enablement",
+    title: "Mobile App Development",
     description:
-      "Product‑focused UI/UX, brand systems, and growth‑ready experiences that support adoption, conversion, and long‑term success.",
+      "Native iOS and Android apps, and cross‑platform solutions built for performance, polish, and real user delight.",
+    tags: ["iOS", "Android", "React Native", "Flutter"],
+    icon: Smartphone,
+    slug: "mobile",
+    highlight: false,
+  },
+  {
+    number: "07",
+    title: "Branding & UI/UX",
+    description:
+      "Brand systems, product design, and growth‑ready UX that drives adoption, conversion, and long‑term loyalty.",
     tags: ["UI/UX", "Branding", "Prototyping", "Growth"],
-    icon: Paintbrush,
-    size: "small",
+    icon: Palette,
+    slug: "ux-design",
+    highlight: false,
+  },
+  {
+    number: "08",
+    title: "Social Media Marketing",
+    description:
+      "Data‑driven social strategies, content creation, and paid campaigns that grow your audience and turn followers into customers.",
+    tags: ["Content", "Paid Ads", "Analytics", "Growth"],
+    icon: Megaphone,
+    slug: "social-media",
+    highlight: false,
   },
 ];
 
@@ -99,33 +125,42 @@ const ServiceCard = ({
   const cardRef = useRef<HTMLDivElement>(null);
   const [pos, setPos] = useState({ x: 50, y: 50 });
   const Icon = service.icon;
+  const navigate = useNavigate();
+  const hl = service.highlight;
 
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      const rect = cardRef.current?.getBoundingClientRect();
-      if (!rect) return;
-      setPos({
-        x: ((e.clientX - rect.left) / rect.width) * 100,
-        y: ((e.clientY - rect.top) / rect.height) * 100,
-      });
-    };
-    window.addEventListener("mousemove", handleMouseMove);
-    return () => window.removeEventListener("mousemove", handleMouseMove);
-  }, []);
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = cardRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    setPos({
+      x: ((e.clientX - rect.left) / rect.width) * 100,
+      y: ((e.clientY - rect.top) / rect.height) * 100,
+    });
+  };
 
   return (
     <motion.div
       ref={cardRef}
-      className="relative rounded-3xl bg-card border border-border/40 overflow-hidden flex flex-col cursor-default group"
+      className={`relative rounded-3xl overflow-hidden flex flex-col cursor-pointer group border transition-all duration-300 ${
+        hl
+          ? "border-[#00d4aa]/40 hover:border-[#48f0e7]/60"
+          : "bg-card border-border/40 hover:border-accent/40"
+      }`}
       initial={{ opacity: 0, y: 60 }}
       animate={isInView ? { opacity: 1, y: 0 } : {}}
       transition={{ duration: 0.8, delay: index * 0.1, ease: [0.25, 0.1, 0.25, 1] }}
+      style={hl ? { background: "linear-gradient(to bottom, #050a12 0%, #126b66 100%)" } : undefined}
+      onClick={() => navigate(`/services/${service.slug}`)}
+      onMouseMove={handleMouseMove}
+      whileHover={{ scale: 1.01 }}
+      whileTap={{ scale: 0.99 }}
     >
       {/* Gradient always magnetic to cursor */}
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
-          background: `radial-gradient(250px circle at ${pos.x}% ${pos.y}%, hsl(var(--accent) / 0.22), transparent 70%)`,
+          background: hl
+            ? `radial-gradient(250px circle at ${pos.x}% ${pos.y}%, rgba(0,212,170,0.25), transparent 70%)`
+            : `radial-gradient(250px circle at ${pos.x}% ${pos.y}%, hsl(var(--accent) / 0.22), transparent 70%)`,
           transition: "background 0.15s ease",
         }}
       />
@@ -133,34 +168,45 @@ const ServiceCard = ({
       <div className="relative z-10 p-8 md:p-10 flex flex-col h-full">
         {/* Top row */}
         <div className="flex items-start justify-between mb-8">
-          <span className="text-xs text-muted-foreground font-medium tracking-widest uppercase">
+          <span className={`text-xs font-medium tracking-widest uppercase ${hl ? "text-[#00d4aa]" : "text-muted-foreground"}`}>
             /{service.number}
           </span>
-          <div className="w-10 h-10 rounded-full border border-border/50 flex items-center justify-center">
-            <Icon size={18} className="text-muted-foreground" />
+          <div className={`w-10 h-10 rounded-full border flex items-center justify-center transition-all duration-300 ${
+            hl
+              ? "border-[#00d4aa]/40 group-hover:bg-[#00d4aa] group-hover:border-[#00d4aa]"
+              : "border-border/50 group-hover:bg-foreground group-hover:border-foreground"
+          }`}>
+            <Icon size={18} className={`transition-colors duration-300 ${hl ? "text-[#00d4aa] group-hover:text-[#050a12]" : "text-muted-foreground group-hover:text-background"}`} />
           </div>
         </div>
 
         {/* Title */}
-        <h3 className="text-2xl md:text-3xl font-semibold leading-tight mb-4 group-hover:text-foreground transition-colors">
+        <h3 className={`text-2xl md:text-3xl font-semibold leading-tight mb-4 transition-colors ${hl ? "text-white" : "group-hover:text-foreground"}`}>
           {service.title}
         </h3>
 
         {/* Description */}
-        <p className="text-muted-foreground leading-relaxed mb-8 flex-1">
+        <p className={`leading-relaxed mb-8 flex-1 ${hl ? "text-[#48f0e7]/70" : "text-muted-foreground"}`}>
           {service.description}
         </p>
 
-        {/* Tags */}
-        <div className="flex flex-wrap gap-2">
-          {service.tags.map((tag) => (
-            <span
-              key={tag}
-              className="px-3 py-1.5 rounded-full border border-border/40 text-xs text-muted-foreground bg-background/40"
-            >
-              {tag}
-            </span>
-          ))}
+        {/* Tags + Arrow */}
+        <div className="flex items-end justify-between gap-4">
+          <div className="flex flex-wrap gap-2">
+            {service.tags.map((tag) => (
+              <span
+                key={tag}
+                className={`px-3 py-1.5 rounded-full border text-xs ${
+                  hl
+                    ? "border-[#00d4aa]/30 text-[#48f0e7] bg-[#126b66]/30"
+                    : "border-border/40 text-muted-foreground bg-background/40"
+                }`}
+              >
+                {tag}
+              </span>
+            ))}
+          </div>
+          <ArrowUpRight size={20} className={`shrink-0 transition-all duration-300 ${hl ? "text-[#00d4aa] group-hover:translate-x-1 group-hover:-translate-y-1" : "text-muted-foreground group-hover:text-foreground group-hover:translate-x-1 group-hover:-translate-y-1"}`} />
         </div>
       </div>
     </motion.div>
@@ -195,30 +241,25 @@ const Services = () => {
       {/* ── Hero ── */}
       <motion.section
         ref={heroRef}
-        className="relative min-h-screen flex items-end section-padding pb-24 overflow-hidden"
+        className="relative min-h-screen flex items-end section-padding pb-16 md:pb-24 overflow-hidden"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 1 }}
       >
-        {/* Animated glow */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
           <motion.div
-            className="absolute top-[calc(50%-350px)] right-0 w-[700px] h-[700px] bg-accent/20 rounded-full blur-[130px]"
-            animate={{
-              x: [0, -60, 20, -40, 0],
-              y: [0, 60, -40, 30, 0],
-              opacity: [0.6, 1, 0.4, 0.9, 0.6],
-            }}
+            className="absolute top-[calc(50%-350px)] right-0 w-[700px] h-[700px] rounded-full blur-[130px]"
+            style={{ background: "rgba(0, 212, 170, 0.08)" }}
+            animate={{ x: [0, -60, 20, -40, 0], y: [0, 60, -40, 30, 0], opacity: [0.6, 1, 0.4, 0.9, 0.6] }}
             transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
           />
           <motion.div
-            className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-accent/10 rounded-full blur-[100px]"
+            className="absolute bottom-0 left-0 w-[400px] h-[400px] rounded-full blur-[100px]"
+            style={{ background: "rgba(18, 107, 102, 0.1)" }}
             animate={{ x: [0, 40, 0], y: [0, -40, 0], opacity: [0.4, 0.7, 0.4] }}
             transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
           />
         </div>
-
-        {/* Gradient overlay */}
         <div className="absolute inset-0 bg-gradient-to-b from-background via-background/40 to-background z-10" />
 
         <motion.div
@@ -226,7 +267,8 @@ const Services = () => {
           style={{ y: heroY, opacity: heroOpacity }}
         >
           <motion.span
-            className="inline-block text-xs text-muted-foreground uppercase tracking-[0.3em] mb-8"
+            className="inline-block text-xs uppercase tracking-[0.3em] mb-8"
+            style={{ color: "#00d4aa" }}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
@@ -237,9 +279,19 @@ const Services = () => {
           <div className="overflow-hidden mb-6">
             <motion.h1
               className="text-[13vw] md:text-[10vw] font-bold leading-[0.88] tracking-tighter"
-              initial={{ y: "110%" }}
-              animate={{ y: 0 }}
-              transition={{ duration: 1.2, ease: [0.25, 0.1, 0.25, 1], delay: 0.2 }}
+              style={{
+                background: "linear-gradient(135deg, #ffffff 0%, #48f0e7 30%, #00d4aa 60%, #126b66 100%)",
+                WebkitBackgroundClip: "text",
+                backgroundClip: "text",
+                color: "transparent",
+                backgroundSize: "200% 200%",
+              }}
+              initial={{ y: "110%", backgroundPosition: "0% 50%" }}
+              animate={{ y: 0, backgroundPosition: "100% 50%" }}
+              transition={{
+                y: { duration: 1.2, ease: [0.25, 0.1, 0.25, 1], delay: 0.2 },
+                backgroundPosition: { duration: 3, ease: "easeInOut", delay: 1, repeat: Infinity, repeatType: "reverse" },
+              }}
             >
               Our Services
             </motion.h1>
@@ -247,7 +299,8 @@ const Services = () => {
 
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mt-10">
             <motion.p
-              className="text-lg md:text-2xl text-muted-foreground max-w-xl leading-relaxed"
+              className="text-lg md:text-2xl max-w-xl leading-relaxed"
+              style={{ color: "#48f0e7" }}
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.6 }}
@@ -256,7 +309,6 @@ const Services = () => {
               intelligent systems, and scalable software platforms.
             </motion.p>
 
-            {/* Stats */}
             <motion.div
               className="flex gap-12"
               initial={{ opacity: 0, y: 20 }}
@@ -264,7 +316,7 @@ const Services = () => {
               transition={{ delay: 0.8 }}
             >
               {[
-                { n: "6", label: "Core Services" },
+                { n: "8", label: "Core Services" },
                 { n: "150+", label: "Projects Shipped" },
                 { n: "98%", label: "Client Satisfaction" },
               ].map((s) => (
@@ -279,7 +331,7 @@ const Services = () => {
       </motion.section>
 
       {/* ── Services Grid ── */}
-      <section className="section-padding py-24 relative" ref={servicesRef}>
+      <section className="section-forced-dark section-padding py-24" ref={servicesRef}>
         <div className="max-w-[1800px] mx-auto">
           {/* Section label */}
           <motion.div
@@ -308,7 +360,7 @@ const Services = () => {
       </section>
 
       {/* ── Process ── */}
-      <section className="section-padding py-24 relative overflow-hidden" ref={processRef}>
+      <section className="section-forced-light section-padding py-24 relative overflow-hidden" ref={processRef}>
         {/* Accent glow */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
           <motion.div
@@ -381,7 +433,7 @@ const Services = () => {
       </section>
 
       {/* ── CTA ── */}
-      <section className="section-padding py-24">
+      <section className="section-forced-dark section-padding py-24">
         <motion.div
           className="max-w-[1800px] mx-auto"
           initial={{ opacity: 0, y: 40 }}
@@ -428,16 +480,17 @@ const Services = () => {
                   <motion.a
                     href="/contact"
                     onClick={(e) => { e.preventDefault(); navigate("/contact"); }}
-                    className="inline-flex items-center gap-3 px-8 py-4 bg-foreground text-background rounded-full font-medium hover:opacity-80 transition-opacity whitespace-nowrap"
-                    whileHover={{ scale: 1.03 }}
-                    whileTap={{ scale: 0.97 }}
+                    className="inline-flex items-center gap-3 px-8 py-4 rounded-full font-medium text-white overflow-hidden relative group whitespace-nowrap"
+                    style={{ background: "linear-gradient(135deg, #126b66, #00d4aa)" }}
+                    whileHover={{ scale: 1.03, boxShadow: "0 0 20px rgba(72, 240, 231, 0.5), 0 0 40px rgba(72, 240, 231, 0.25), 0 0 60px rgba(72, 240, 231, 0.1)" }}
+                    whileTap={{ scale: 0.98 }}
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
                     transition={{ delay: 0.4 }}
                   >
-                    Start a Project
-                    <ArrowUpRight size={18} />
+                    <span className="relative z-10 font-medium">Start a Project</span>
+                    <ArrowUpRight size={18} className="relative z-10" />
                   </motion.a>
                 </Magnetic>
                 <Magnetic strength={0.15}>

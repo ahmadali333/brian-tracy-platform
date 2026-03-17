@@ -1,8 +1,5 @@
 import {
   motion,
-  useScroll,
-  useTransform,
-  useSpring,
   useInView,
 } from "framer-motion";
 import { useRef } from "react";
@@ -47,28 +44,16 @@ export const PricingSection = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const isInView = useInView(containerRef, { once: true, margin: "-10%" });
 
-  const { scrollYProgress } = useScroll({
-    target: containerRef,
-    offset: ["start end", "end start"],
-  });
-
-  const smoothProgress = useSpring(scrollYProgress, {
-    stiffness: 50,
-    damping: 20,
-  });
-  const rotateLeft = useTransform(smoothProgress, [0, 1], [5, -5]);
-  const rotateRight = useTransform(smoothProgress, [0, 1], [-5, 5]);
-
   return (
     <section
       id="pricing"
-      className="section-padding md:py-20 py-24 relative overflow-hidden"
+      className="section-forced-dark section-padding md:py-20 py-24 overflow-hidden"
       ref={containerRef}
     >
       <div className="max-w-[1800px] mx-auto">
         {/* Header */}
         <motion.div
-          className="flex items-center gap-4 mb-20"
+          className="flex items-center gap-4 mb-12"
           initial={{ opacity: 0, y: 30 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 1, ease: [0.25, 0.1, 0.25, 1] }}
@@ -81,10 +66,10 @@ export const PricingSection = () => {
         </motion.div>
 
         {/* Title Grid */}
-        <div className="grid lg:grid-cols-2 gap-16 mb-24">
+        <div className="grid lg:grid-cols-2 gap-12 mb-16">
           <div className="overflow-hidden">
             <motion.h2
-              className="text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-bold leading-[0.95] pb-4"
+              className="text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold leading-[0.95] pb-4"
               initial={{ y: "100%" }}
               animate={isInView ? { y: 0 } : {}}
               transition={{
@@ -128,10 +113,6 @@ export const PricingSection = () => {
                 y: -15,
                 scale: 1.02,
                 transition: { duration: 0.4 },
-              }}
-              style={{
-                rotate: index === 0 ? rotateLeft : rotateRight,
-                transformStyle: "preserve-3d",
               }}
             >
               {/* Popular Badge with Pulse */}

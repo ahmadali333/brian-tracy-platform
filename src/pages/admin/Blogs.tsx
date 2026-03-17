@@ -10,15 +10,16 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Textarea } from '@/components/ui/textarea';
 import { Plus, Pencil, Trash2, Loader2, Upload, X } from 'lucide-react';
 import { toast } from 'sonner';
+import type { BlogPost } from '@/types/api';
 import ReactQuill from 'react-quill-new';
 import "react-quill-new/dist/quill.snow.css";
 
 export default function AdminBlogs() {
     const quillRef = useRef(null);
-    const [blogs, setBlogs] = useState<any[]>([]);
+    const [blogs, setBlogs] = useState<BlogPost[]>([]);
     const [loading, setLoading] = useState(true);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
-    const [editingBlog, setEditingBlog] = useState<any | null>(null);
+    const [editingBlog, setEditingBlog] = useState<BlogPost | null>(null);
 
     const [imageFile, setImageFile] = useState<File | null>(null);
 
@@ -121,7 +122,7 @@ export default function AdminBlogs() {
         setImageFile(null);
     };
 
-    const openEdit = (blog: any) => {
+    const openEdit = (blog: BlogPost) => {
         setEditingBlog(blog);
         setFormData({
             title: blog.title,

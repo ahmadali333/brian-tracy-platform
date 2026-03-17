@@ -5,66 +5,66 @@
 @layer base {
   :root {
     /* Light Mode (Default) */
-    --background: 0 0% 96.5%; /* #F6F6F6 */
-    --foreground: 0 0% 7.9%; /* #212121 */
+    --background: 220 10% 96%; /* #F3F4F6 - cool gray */
+    --foreground: 220 20% 8%; /* near-black with blue undertone */
 
-    --card: 0 0% 96.5%;
-    --card-foreground: 0 0% 12.9%;
+    --card: 220 10% 96%;
+    --card-foreground: 220 20% 10%;
 
-    --popover: 0 0% 96.5%;
-    --popover-foreground: 0 0% 12.9%;
+    --popover: 220 10% 96%;
+    --popover-foreground: 220 20% 10%;
 
-    --primary: 0 0% 12.9%;
-    --primary-foreground: 0 0% 96.5%;
+    --primary: 220 20% 10%;
+    --primary-foreground: 220 10% 96%;
 
-    --secondary: 36 33% 78%; /* #D9CAB3 */
-    --secondary-foreground: 0 0% 12.9%;
+    --secondary: 174 50% 20%; /* teal-dark secondary */
+    --secondary-foreground: 0 0% 98%;
 
-    --muted: 0 0% 75%;
-    --muted-foreground: 0 0% 70.1%;
+    --muted: 215 10% 78%;
+    --muted-foreground: 215 12% 50%;
 
-    --accent: 155 17.2% 51.2%; /* #6D9886 */
-    --accent-foreground: 0 0% 96.5%;
+    --accent: 174 72% 25%; /* #126b66 — brand teal */
+    --accent-foreground: 0 0% 98%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 183 100% 29%;
-    --input: 155 17.2% 51.2%;
-    --ring: 0 0% 12.9%;
+    --border: 174 40% 30%;
+    --input: 174 72% 25%;
+    --ring: 174 72% 25%;
 
     --radius: 0.5rem;
   }
 
   .dark {
     /* Dark Mode */
-    --background: 0 0% 0%; /* #212121 */
-    --foreground: 0 0% 100%; /* #F6F6F6 */
+    --background: 220 55% 3%; /* #050a12 — deep blue-black */
+    --foreground: 36 20% 92%; /* #f0ece6 — warm white */
 
-    --card: 0 0% 12.9%;
-    --card-foreground: 0 0% 96.5%;
+    --card: 220 40% 7%;
+    --card-foreground: 36 20% 92%;
 
-    --popover: 0 0% 12.9%;
-    --popover-foreground: 0 0% 96.5%;
+    --popover: 220 40% 7%;
+    --popover-foreground: 36 20% 92%;
 
-    --primary: 0 0% 96.5%;
-    --primary-foreground: 0 0% 12.9%;
+    --primary: 36 20% 92%;
+    --primary-foreground: 220 55% 3%;
 
-    --secondary: 36 33% 78%; /* #D9CAB3 */
-    --secondary-foreground: 0 0% 12.9%;
+    --secondary: 174 50% 20%;
+    --secondary-foreground: 0 0% 98%;
 
-     --muted: 0 0% 75%;
-    --muted-foreground: 0 0% 70.1%;
+    --muted: 215 15% 25%;
+    --muted-foreground: 210 13% 54%; /* #7a8a99 — blue-tinted gray */
 
-    --accent: 155 17.2% 51.2%; /* #6D9886 */
-    --accent-foreground: 0 0% 96.5%;
+    --accent: 168 100% 42%; /* #00d4aa — bright cyan */
+    --accent-foreground: 220 55% 3%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 96.5%;
 
-   --border: 183 100% 29%;
-    --input: 155 17.2% 51.2%;
-    --ring: 0 0% 96.5%;
+    --border: 174 40% 20%;
+    --input: 174 72% 25%;
+    --ring: 168 100% 42%;
   }
 }
 
@@ -75,6 +75,11 @@
 
   html {
     scroll-behavior: auto;
+    overflow-x: clip;
+  }
+
+  body {
+    max-width: 100%;
   }
 
   html.lenis, html.lenis body {
@@ -193,17 +198,168 @@
   }
 
   .parallax-slow {
-    will-change: transform;
+    contain: layout;
   }
 
   .parallax-fast {
-    will-change: transform;
+    contain: layout;
   }
 
   .cursor-magnetic {
     @apply cursor-pointer;
   }
 }
+
+
+/* ─── Section forced themes ───────────────────────────────────────────────
+   Overrides CSS vars at section scope so children still use hsl(var(--x)).
+   Green gradient is static (no animation) — pure CSS, zero JS overhead.
+───────────────────────────────────────────────────────────────────────── */
+
+.section-forced-dark {
+  --background: 220 55% 3%;
+  --foreground: 36 20% 92%;
+  --card: 220 40% 7%;
+  --card-foreground: 36 20% 92%;
+  --muted: 215 15% 25%;
+  --muted-foreground: 210 13% 54%;
+  --primary: 36 20% 92%;
+  --primary-foreground: 220 55% 3%;
+  --accent: 168 100% 42%;
+  --border: 174 40% 20%;
+  background-color: hsl(var(--background));
+  background-image:
+    radial-gradient(ellipse 700px 500px at 8% 15%, hsl(174 72% 25% / 0.10) 0%, transparent 60%),
+    radial-gradient(ellipse 500px 400px at 92% 85%, hsl(168 100% 42% / 0.06) 0%, transparent 60%);
+  color: hsl(var(--foreground));
+  position: relative;
+}
+
+.section-forced-light {
+  --background: 220 10% 97%;
+  --foreground: 220 20% 8%;
+  --card: 220 10% 97%;
+  --card-foreground: 220 20% 8%;
+  --muted: 215 10% 82%;
+  --muted-foreground: 215 12% 42%;
+  --primary: 220 20% 8%;
+  --primary-foreground: 220 10% 97%;
+  --accent: 174 72% 25%;
+  --border: 174 30% 75%;
+  background-color: hsl(var(--background));
+  background-image:
+    radial-gradient(ellipse 800px 600px at 90% 10%, hsl(174 72% 25% / 0.06) 0%, transparent 60%),
+    radial-gradient(ellipse 600px 500px at 10% 90%, hsl(168 100% 42% / 0.04) 0%, transparent 60%);
+  color: hsl(var(--foreground));
+  position: relative;
+}
+
+/* Article content styling — force light text over inline styles from CMS */
+.article-content,
+.article-content * {
+  color: hsl(var(--muted-foreground)) !important;
+}
+.article-content h1,
+.article-content h2,
+.article-content h3,
+.article-content h4,
+.article-content h5,
+.article-content h6,
+.article-content strong,
+.article-content b {
+  color: hsl(var(--foreground)) !important;
+}
+.article-content a {
+  color: hsl(var(--accent)) !important;
+}
+
+/* ─── Hero stars ──────────────────────────────────────────────────────── */
+@keyframes twinkle { 0%,100%{opacity:var(--base-o, .3)} 50%{opacity:1} }
+.star {
+  position: absolute;
+  border-radius: 50%;
+  background: #fff;
+  animation: twinkle var(--d) ease-in-out infinite var(--delay);
+  contain: strict;
+}
+
+/* ─── Clients logo marquee ────────────────────────────────────────────── */
+@keyframes cs-scroll-fwd {
+  from { transform: translate3d(0, 0, 0); }
+  to   { transform: translate3d(-50%, 0, 0); }
+}
+@keyframes cs-scroll-rev {
+  from { transform: translate3d(-50%, 0, 0); }
+  to   { transform: translate3d(0, 0, 0); }
+}
+
+.cs-track-fwd,
+.cs-track-rev {
+  display: flex;
+  align-items: center;
+  width: max-content;
+  will-change: transform;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.cs-track-fwd { animation: cs-scroll-fwd 35s linear infinite; }
+.cs-track-rev { animation: cs-scroll-rev 35s linear infinite; }
+
+.cs-logo-card {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 180px;
+  height: 80px;
+  flex-shrink: 0;
+  margin: 0 16px;
+  border-radius: 10px;
+  background-color: #f0f0f0;
+  padding: 14px 20px;
+}
+
+.cs-logo-img {
+  max-height: 68px;
+  max-width: 160px;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  display: block;
+}
+
+/* ─── Text marquee ────────────────────────────────────────────────────── */
+@keyframes mq-scroll-l {
+  from { transform: translate3d(0, 0, 0); }
+  to   { transform: translate3d(-50%, 0, 0); }
+}
+@keyframes mq-scroll-r {
+  from { transform: translate3d(-50%, 0, 0); }
+  to   { transform: translate3d(0, 0, 0); }
+}
+
+.mq-wrap {
+  contain: layout style paint;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.mq-track-fwd,
+.mq-track-rev {
+  display: flex;
+  width: max-content;
+  will-change: transform;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  transform: translateZ(0);
+}
+
+.mq-track-fwd { animation: mq-scroll-l 90s linear infinite; }
+.mq-track-rev { animation: mq-scroll-r 90s linear infinite; }
+
+.mq-filled  { color: #48f0e7; opacity: 0.4; }
+.mq-outline { color: transparent; -webkit-text-stroke: 1.5px rgba(72, 240, 231, 0.3); }
+.mq-dot     { background: rgba(72, 240, 231, 0.25); }
 
 ::view-transition-old(root),
 ::view-transition-new(root) {

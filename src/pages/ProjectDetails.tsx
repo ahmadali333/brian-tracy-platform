@@ -1,4 +1,4 @@
-import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useRef, useEffect, useState } from "react";
 import { useParams, useNavigate, Link, useLocation } from "react-router-dom";
 import { WarpTransition, WarpMode } from "@/components/WarpTransition";
@@ -26,8 +26,6 @@ import {
   Zap,
   Rocket,
   Layers as LayersIcon,
-  ChevronLeft,
-  ChevronRight,
 } from "lucide-react";
 import { Magnetic } from "@/components/AnimationComponents";
 import { usePageMetadata } from "@/hooks/usePageMetadata";
@@ -154,28 +152,13 @@ const ProjectDetails = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const containerRef = useRef<HTMLDivElement>(null);
-  const nextProjectRef = useRef<HTMLElement>(null);
-  const conceptsRef = useRef<HTMLElement>(null);
-
-  const { scrollYProgress: conceptsProgress } = useScroll({
-    target: conceptsRef,
-    offset: ["start end", "end start"],
-  });
-
-  const conceptsX1 = useTransform(conceptsProgress, [0, 1], [0, -500]);
-  const conceptsX2 = useTransform(conceptsProgress, [0, 1], [-500, 0]);
   const location = useLocation();
   const [warpMode, setWarpMode] = useState<WarpMode>("idle");
   const [chargeProgress, setChargeProgress] = useState(0);
-  const [responsiveIndex, setResponsiveIndex] = useState(0);
-  const [slideWidth, setSlideWidth] = useState(typeof window !== 'undefined' && window.innerWidth < 768 ? 216 : 304);
-  useEffect(() => {
-    const updateWidth = () => setSlideWidth(window.innerWidth < 768 ? 216 : 304);
-    window.addEventListener('resize', updateWidth);
-    return () => window.removeEventListener('resize', updateWidth);
-  }, []);
   const isHolding = useRef(false);
   const holdInterval = useRef<NodeJS.Timeout>();
+  const fadeOutInterval = useRef<NodeJS.Timeout>();
+  const decayInterval = useRef<NodeJS.Timeout>();
 
   const project = projectsData.find((p) => p.id === id);
   const projectIndex = projectsData.findIndex((p) => p.id === id);
@@ -239,6 +222,9 @@ const ProjectDetails = () => {
     fxAudioRef.current = new Audio("/fx-light-90387.mp3");
     fxAudioRef.current.volume = 1.0;
     return () => {
+      if (holdInterval.current) clearInterval(holdInterval.current);
+      if (fadeOutInterval.current) clearInterval(fadeOutInterval.current);
+      if (decayInterval.current) clearInterval(decayInterval.current);
       if (fxAudioRef.current) {
         fxAudioRef.current.pause();
         fxAudioRef.current = null;
@@ -256,7 +242,7 @@ const ProjectDetails = () => {
     if (fxAudioRef.current) {
       fxAudioRef.current.currentTime = 0;
       fxAudioRef.current.volume = 1.0;
-      fxAudioRef.current.play().catch(console.error);
+      fxAudioRef.current.play().catch(() => {});
     }
 
     // Increment progress
@@ -281,19 +267,16 @@ const ProjectDetails = () => {
 
       // Fade out FX
       if (fxAudioRef.current) {
-        const fadeOut = setInterval(() => {
+        if (fadeOutInterval.current) clearInterval(fadeOutInterval.current);
+        fadeOutInterval.current = setInterval(() => {
           if (fxAudioRef.current && fxAudioRef.current.volume > 0.1) {
             fxAudioRef.current.volume -= 0.1;
           } else {
-            clearInterval(fadeOut);
+            if (fadeOutInterval.current) clearInterval(fadeOutInterval.current);
             if (fxAudioRef.current) {
               fxAudioRef.current.pause();
               fxAudioRef.current.currentTime = 0;
             }
-            // Resume BG music after fade out? Or immediately?
-            // User said "if I unhold... decrease the sound... slowly".
-            // "until fx-light sound is completed" applied to the pause.
-            // So we should resume BG music now.
             window.dispatchEvent(new Event("music:resume"));
           }
         }, 100);
@@ -301,10 +284,11 @@ const ProjectDetails = () => {
         window.dispatchEvent(new Event("music:resume"));
       }
 
-      const decay = setInterval(() => {
+      if (decayInterval.current) clearInterval(decayInterval.current);
+      decayInterval.current = setInterval(() => {
         setChargeProgress(prev => {
           if (prev <= 0) {
-            clearInterval(decay);
+            if (decayInterval.current) clearInterval(decayInterval.current);
             return 0;
           }
           return prev - 5;
@@ -510,8 +494,16 @@ const ProjectDetails = () => {
         </div>
       </section>
 
-      {/* Initial Concepts - Scroll Driven Parallax */}
+      {/* Initial Concepts - Auto Rotating Marquee */}
       <section ref={conceptsRef} className="py-24 md:py-40 overflow-hidden">
+        <style>{`
+          @keyframes concept-fwd { from { transform: translate3d(0,0,0); } to { transform: translate3d(-50%,0,0); } }
+          @keyframes concept-rev { from { transform: translate3d(-50%,0,0); } to { transform: translate3d(0,0,0); } }
+          .concept-row-fwd { display:flex; width:max-content; animation: concept-fwd 40s linear infinite; will-change:transform; backface-visibility:hidden; }
+          .concept-row-rev { display:flex; width:max-content; animation: concept-rev 40s linear infinite; will-change:transform; backface-visibility:hidden; }
+          .concept-row-fwd:hover, .concept-row-rev:hover { animation-play-state: paused; }
+        `}</style>
+
         <div className="md:ml-28 max-md:text-center max-md:px-4">
           <motion.div
             className="mb-16"
@@ -525,58 +517,48 @@ const ProjectDetails = () => {
           </motion.div>
         </div>
 
-        {/* Parallax Row 1 - Left to Right (Moves Left on Scroll) */}
-        <div className="relative mb-6">
-          <motion.div
-            className="flex gap-6 pl-6 md:pl-0"
-            style={{ x: conceptsX1 }}
-          >
+        {/* Row 1 - Auto scroll forward */}
+        <div className="overflow-hidden mb-6">
+          <div className="concept-row-fwd">
             {[...project.concepts, ...project.concepts].map(
               (concept, index) => (
-                <motion.div
+                <div
                   key={index}
-                  className="relative shrink-0 w-[300px] md:w-[400px] aspect-[16/8] rounded-xl overflow-hidden group"
-                  whileHover={{ scale: 1.02 }}
-                  transition={{ duration: 0.3 }}
+                  className="relative shrink-0 w-[300px] md:w-[400px] aspect-[16/10] rounded-xl overflow-hidden group mx-3"
                 >
                   <img
                     src={concept}
-                    alt={`Concept ${index + 1}`}
+                    alt={`Concept ${(index % project.concepts.length) + 1}`}
                     loading="lazy"
-                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                   />
                   <div className="absolute inset-0 bg-foreground/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                </motion.div>
+                </div>
               )
             )}
-          </motion.div>
+          </div>
         </div>
 
-        {/* Parallax Row 2 - Right to Left (Moves Right on Scroll) */}
-        <div className="relative">
-          <motion.div
-            className="flex gap-6 pl-6 md:pl-0"
-            style={{ x: conceptsX2 }}
-          >
+        {/* Row 2 - Auto scroll reverse */}
+        <div className="overflow-hidden">
+          <div className="concept-row-rev">
             {[...project.concepts, ...project.concepts]
               .reverse()
               .map((concept, index) => (
-                <motion.div
+                <div
                   key={index}
-                  className="relative shrink-0 w-[300px] md:w-[400px] aspect-[16/8] rounded-xl overflow-hidden group"
-                  whileHover={{ scale: 1.02 }}
-                  transition={{ duration: 0.3 }}
+                  className="relative shrink-0 w-[300px] md:w-[400px] aspect-[16/10] rounded-xl overflow-hidden group mx-3"
                 >
                   <img
                     src={concept}
-                    alt={`Concept ${index + 1}`}
+                    alt={`Concept ${(index % project.concepts.length) + 1}`}
                     loading="lazy"
-                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                   />
                   <div className="absolute inset-0 bg-foreground/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                </motion.div>
+                </div>
               ))}
-          </motion.div>
+          </div>
         </div>
       </section>
 
@@ -639,10 +621,16 @@ const ProjectDetails = () => {
         </div>
       </section>
 
-      {/* Responsive Showcase */}
-      <section className="px-6 md:px-12 lg:px-20 py-24 md:py-40">
-        <div className="max-w-[1600px] mx-auto max-md:text-center">
-          <div className="flex justify-between items-center mb-10">
+      {/* Responsive Showcase - Auto Rotating */}
+      {project.responsive && project.responsive.length > 0 && (
+        <section className="py-24 md:py-40 overflow-hidden">
+          <style>{`
+            @keyframes resp-scroll { from { transform: translate3d(0,0,0); } to { transform: translate3d(-50%,0,0); } }
+            .resp-marquee { display:flex; width:max-content; animation: resp-scroll 45s linear infinite; will-change:transform; backface-visibility:hidden; }
+            .resp-marquee:hover { animation-play-state: paused; }
+          `}</style>
+
+          <div className="md:ml-28 max-md:text-center max-md:px-4 mb-10">
             <motion.h2
               className="text-3xl md:text-5xl uppercase tracking-[0.2em] text-muted-foreground"
               initial={{ opacity: 0 }}
@@ -651,85 +639,28 @@ const ProjectDetails = () => {
             >
               Responsive
             </motion.h2>
-
-            <div className="flex items-center gap-4">
-              <Magnetic strength={0.2}>
-                <motion.button
-                  onClick={() => {
-                    setResponsiveIndex((prev) => Math.max(0, prev - 1));
-                  }}
-                  disabled={responsiveIndex === 0}
-                  className="w-14 h-14 rounded-full border border-border flex items-center justify-center group overflow-hidden relative disabled:opacity-50 disabled:cursor-not-allowed"
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                >
-                  <motion.span
-                    className="absolute inset-0 bg-foreground"
-                    initial={{ x: "-100%" }}
-                    whileHover={{ x: 0 }}
-                    transition={{ duration: 0.3 }}
-                  />
-                  <ChevronLeft size={20} className="relative z-10 group-hover:text-background transition-colors" />
-                </motion.button>
-              </Magnetic>
-              <Magnetic strength={0.2}>
-                <motion.button
-                  onClick={() => {
-                    const maxIndex = (project.responsive?.length || 0) - (window.innerWidth < 768 ? 1 : 3); // Conservative max
-                    setResponsiveIndex((prev) =>
-                      Math.min((project.responsive?.length || 1) - 1, prev + 1)
-                    );
-                  }}
-                  disabled={!project.responsive || responsiveIndex >= project.responsive.length - 1} // Simplified check
-                  className="w-14 h-14 rounded-full border border-border flex items-center justify-center group overflow-hidden relative"
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                >
-                  <motion.span
-                    className="absolute inset-0 bg-foreground"
-                    initial={{ x: "-100%" }}
-                    whileHover={{ x: 0 }}
-                    transition={{ duration: 0.3 }}
-                  />
-                  <ChevronRight size={20} className="relative z-10 group-hover:text-background transition-colors" />
-                </motion.button>
-              </Magnetic>
-            </div>
           </div>
 
-
-          {/* Slider Container */}
-          <div className="relative overflow-hidden mb-12">
-            <motion.div
-              className="flex gap-6"
-              animate={{
-                x: `-${responsiveIndex * slideWidth}px`,
-              }}
-              transition={{
-                type: "spring",
-                stiffness: 300,
-                damping: 30,
-              }}
-            >
-              {(project.responsive ?? []).map((src, i) => (
+          <div className="overflow-hidden">
+            <div className="resp-marquee">
+              {[...project.responsive, ...project.responsive].map((src, i) => (
                 <div
-                  key={`${src}-${i}`}
-                  className="relative flex-shrink-0 w-[200px] md:w-[280px] aspect-[9/16] rounded-xl overflow-hidden group"
+                  key={i}
+                  className="relative flex-shrink-0 w-[200px] md:w-[260px] aspect-[9/16] rounded-xl overflow-hidden group mx-3"
                 >
                   <img
                     src={src}
                     loading="lazy"
-                    alt={`Mobile ${i + 1}`}
-                    className="w-full h-full object-cover"
+                    alt={`Mobile ${(i % project.responsive!.length) + 1}`}
+                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                   />
                   <div className="absolute inset-0 bg-foreground/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                 </div>
               ))}
-            </motion.div>
+            </div>
           </div>
-
-        </div>
-      </section>
+        </section>
+      )}
 
 
       {/* The Impact */}

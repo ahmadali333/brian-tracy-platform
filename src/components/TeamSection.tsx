@@ -1,12 +1,9 @@
 import {
   motion,
-  useScroll,
-  useTransform,
-  useSpring,
   useInView,
 } from "framer-motion";
 import { useRef } from "react";
-import { LineReveal, Magnetic, ImageReveal } from "./AnimationComponents";
+import { LineReveal, Magnetic } from "./AnimationComponents";
 import team1 from "@/assets/team-1.jpg";
 import team2 from "@/assets/team-2.jpg";
 import team3 from "@/assets/team-3.jpg";
@@ -24,16 +21,6 @@ export const TeamSection = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const isInView = useInView(containerRef, { once: true, margin: "-10%" });
 
-  const { scrollYProgress } = useScroll({
-    target: containerRef,
-    offset: ["start end", "end start"],
-  });
-
-  const smoothProgress = useSpring(scrollYProgress, {
-    stiffness: 50,
-    damping: 20,
-  });
-
   return (
     <section
       id="about"
@@ -43,7 +30,7 @@ export const TeamSection = () => {
       <div className="max-w-[1800px] mx-auto">
         {/* Header */}
         <motion.div
-          className="flex items-center gap-4 mb-20"
+          className="flex items-center gap-4 mb-12"
           initial={{ opacity: 0, y: 30 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 1, ease: [0.25, 0.1, 0.25, 1] }}
@@ -57,14 +44,14 @@ export const TeamSection = () => {
 
         {/* Title */}
         <motion.div
-          className="mb-24 max-w-4xl"
+          className="mb-16 max-w-4xl"
           initial={{ opacity: 0 }}
           animate={isInView ? { opacity: 1 } : {}}
           transition={{ duration: 1, delay: 0.2 }}
         >
           <div className="overflow-hidden">
             <motion.h2
-              className="text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-bold leading-[0.95]"
+              className="text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold leading-[0.95]"
               initial={{ y: "100%" }}
               animate={isInView ? { y: 0 } : {}}
               transition={{

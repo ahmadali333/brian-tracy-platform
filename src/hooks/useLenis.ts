@@ -1,48 +1,13 @@
-import { useEffect, useRef, RefObject } from 'react';
-import Lenis from 'lenis';
+import { useEffect, RefObject } from 'react';
 
-let lenisInstance: Lenis | null = null;
-
+/**
+ * Pure native scroll — no Lenis, no GSAP ScrollTrigger refresh.
+ * GSAP ScrollTrigger is only used locally in HeroGlobe for the globe scrub.
+ */
 export const useLenis = () => {
-  const lenisRef = useRef<Lenis | null>(null);
-
-  useEffect(() => {
-    if (lenisInstance) {
-      lenisRef.current = lenisInstance;
-      return;
-    }
-
-    const lenis = new Lenis({
-      duration: 1.5,
-      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-      orientation: 'vertical',
-      gestureOrientation: 'vertical',
-      smoothWheel: true,
-      touchMultiplier: 2,
-      infinite: false,
-    });
-
-    lenisInstance = lenis;
-    lenisRef.current = lenis;
-
-    function raf(time: number) {
-      lenis.raf(time);
-      requestAnimationFrame(raf);
-    }
-
-    requestAnimationFrame(raf);
-
-    // Sync with scroll events
-    lenis.on('scroll', () => {
-      // Trigger any scroll-based animations
-    });
-
-    return () => {
-      // Don't destroy on unmount to keep smooth scroll
-    };
-  }, []);
-
-  return lenisRef;
+  // Intentionally empty — kept for API compatibility.
+  // ScrollTrigger.refresh() was removed because it was fighting
+  // with Framer Motion's own scroll tracking every tick.
 };
 
 export const useParallax = (ref: RefObject<HTMLElement>, speed: number = 0.5) => {
@@ -51,10 +16,8 @@ export const useParallax = (ref: RefObject<HTMLElement>, speed: number = 0.5) =>
     if (!element) return;
 
     const handleScroll = () => {
-      const rect = element.getBoundingClientRect();
       const scrolled = window.scrollY;
-      const yPos = -(scrolled * speed);
-      element.style.transform = `translate3d(0, ${yPos}px, 0)`;
+      element.style.transform = `translate3d(0, ${-(scrolled * speed)}px, 0)`;
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
@@ -63,20 +26,14 @@ export const useParallax = (ref: RefObject<HTMLElement>, speed: number = 0.5) =>
 };
 
 export const scrollTo = (target: string | number) => {
-  if (lenisInstance) {
-    lenisInstance.scrollTo(target);
-    return;
-  }
-
-  if (typeof target === "number") {
-    window.scrollTo(0, target);
+  if (typeof target === 'string') {
+    const el = document.querySelector(target);
+    if (el) el.scrollIntoView({ behavior: 'smooth' });
+  } else {
+    window.scrollTo({ top: target, behavior: 'smooth' });
   }
 };
 
 export const scrollToTop = () => {
-  if (lenisInstance) {
-    lenisInstance.scrollTo(0, { immediate: true });
-    return;
-  }
   window.scrollTo(0, 0);
 };

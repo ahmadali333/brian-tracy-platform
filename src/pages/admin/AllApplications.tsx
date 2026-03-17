@@ -8,9 +8,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { Trash2, Loader2, Eye } from 'lucide-react';
 import { toast } from 'sonner';
+import type { JobApplication } from '@/types/api';
 
 export default function AllApplications() {
-    const [applications, setApplications] = useState<any[]>([]);
+    const [applications, setApplications] = useState<JobApplication[]>([]);
     const [loading, setLoading] = useState(true);
     const [selectedLetter, setSelectedLetter] = useState<string | null>(null);
     const [filterJobId, setFilterJobId] = useState('');

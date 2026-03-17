@@ -1,37 +1,52 @@
-import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
-import { useEffect, useState } from "react";
+import { motion, useMotionValue, useSpring } from "framer-motion";
+import { useEffect, useRef, useState } from "react";
+
+const isTouchDevice = typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
 
 export const CustomCursor = () => {
   const [isHovering, setIsHovering] = useState(false);
   const [isClicking, setIsClicking] = useState(false);
   const [cursorText, setCursorText] = useState("");
-  const [isVisible, setIsVisible] = useState(false);
+  const isVisibleRef = useRef(false);
+  const opacityMain = useMotionValue(0);
+  const opacityTrail = useMotionValue(0);
 
+  // Raw motion values for main cursor — no spring overhead, instant response
   const cursorX = useMotionValue(-100);
   const cursorY = useMotionValue(-100);
-  const cursorXSmooth = useSpring(cursorX, { stiffness: 300, damping: 28 });
-  const cursorYSmooth = useSpring(cursorY, { stiffness: 300, damping: 28 });
 
-  const trailX = useSpring(cursorX, { stiffness: 100, damping: 20 });
-  const trailY = useSpring(cursorY, { stiffness: 100, damping: 20 });
-
-  const cursorSize = useSpring(isHovering ? 80 : 16, { stiffness: 300, damping: 20 });
-  const trailSize = useSpring(isHovering ? 100 : 40, { stiffness: 200, damping: 25 });
+  // Only the trail gets springs — 2 springs instead of 6
+  const trailX = useSpring(cursorX, { stiffness: 150, damping: 20 });
+  const trailY = useSpring(cursorY, { stiffness: 150, damping: 20 });
 
   useEffect(() => {
+    let rafId = 0;
+
     const handleMouseMove = (e: MouseEvent) => {
-      cursorX.set(e.clientX);
-      cursorY.set(e.clientY);
-      setIsVisible(true);
+      cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(() => {
+        cursorX.set(e.clientX);
+        cursorY.set(e.clientY);
+        if (!isVisibleRef.current) {
+          isVisibleRef.current = true;
+          opacityMain.set(1);
+          opacityTrail.set(0.5);
+        }
+      });
     };
 
     const handleMouseDown = () => setIsClicking(true);
     const handleMouseUp = () => setIsClicking(false);
-    const handleMouseLeave = () => setIsVisible(false);
-    const handleMouseEnter = () => setIsVisible(true);
+    const handleMouseLeave = () => { opacityMain.set(0); opacityTrail.set(0); isVisibleRef.current = false; };
+    const handleMouseEnter = () => { opacityMain.set(1); opacityTrail.set(0.5); isVisibleRef.current = true; };
 
     const handleHoverStart = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
+      if (target.closest('[data-cursor-hide]')) {
+        opacityMain.set(0);
+        opacityTrail.set(0);
+        return;
+      }
       const hoverElement = target.closest('[data-cursor]');
       if (hoverElement) {
         setIsHovering(true);
@@ -39,12 +54,19 @@ export const CustomCursor = () => {
       }
     };
 
-    const handleHoverEnd = () => {
+    const handleHoverEnd = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (target.closest('[data-cursor-hide]')) {
+        if (isVisibleRef.current) {
+          opacityMain.set(1);
+          opacityTrail.set(0.5);
+        }
+      }
       setIsHovering(false);
       setCursorText("");
     };
 
-    window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mousemove", handleMouseMove, { passive: true });
     window.addEventListener("mousedown", handleMouseDown);
     window.addEventListener("mouseup", handleMouseUp);
     document.addEventListener("mouseleave", handleMouseLeave);
@@ -53,6 +75,7 @@ export const CustomCursor = () => {
     document.addEventListener("mouseout", handleHoverEnd);
 
     return () => {
+      cancelAnimationFrame(rafId);
       window.removeEventListener("mousemove", handleMouseMove);
       window.removeEventListener("mousedown", handleMouseDown);
       window.removeEventListener("mouseup", handleMouseUp);
@@ -61,41 +84,37 @@ export const CustomCursor = () => {
       document.removeEventListener("mouseover", handleHoverStart);
       document.removeEventListener("mouseout", handleHoverEnd);
     };
-  }, [cursorX, cursorY]);
+  }, [cursorX, cursorY, opacityMain, opacityTrail]);
 
-  // Don't show on touch devices
-  if (typeof window !== 'undefined' && 'ontouchstart' in window) {
+  if (isTouchDevice) {
     return null;
   }
 
   return (
     <>
-      {/* Trail/Background cursor */}
+      {/* Trail cursor */}
       <motion.div
-        className="fixed top-0 left-0 pointer-events-none z-[9998] rounded-full border border-foreground/20 mix-blend-difference"
+        className="fixed top-0 left-0 pointer-events-none z-[9998] rounded-full border border-foreground/40 w-10 h-10"
         style={{
           x: trailX,
           y: trailY,
-          width: trailSize,
-          height: trailSize,
           translateX: "-50%",
           translateY: "-50%",
-          opacity: isVisible ? 0.5 : 0,
+          opacity: opacityTrail,
+          scale: isHovering ? 2.5 : 1,
         }}
       />
 
-      {/* Main cursor */}
+      {/* Main cursor — raw values, no spring delay */}
       <motion.div
-        className="fixed top-0 left-0 pointer-events-none z-[9999] rounded-full bg-foreground mix-blend-difference flex items-center justify-center"
+        className="fixed top-0 left-0 pointer-events-none z-[9999] rounded-full bg-foreground flex items-center justify-center w-4 h-4"
         style={{
-          x: cursorXSmooth,
-          y: cursorYSmooth,
-          width: cursorSize,
-          height: cursorSize,
+          x: cursorX,
+          y: cursorY,
           translateX: "-50%",
           translateY: "-50%",
-          opacity: isVisible ? 1 : 0,
-          scale: isClicking ? 0.8 : 1,
+          opacity: opacityMain,
+          scale: isClicking ? 0.8 : isHovering ? 5 : 1,
         }}
       >
         {cursorText && (

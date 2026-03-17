@@ -20,7 +20,7 @@ export const ThemeToggle = () => {
     const toggleTheme = async (e: React.MouseEvent<HTMLButtonElement>) => {
         const newTheme = resolvedTheme === "dark" ? "light" : "dark";
 
-        // @ts-ignore
+        // @ts-expect-error -- startViewTransition is not yet in all TS DOM libs
         if (!document.startViewTransition) {
             setTheme(newTheme);
             return;
@@ -33,7 +33,7 @@ export const ThemeToggle = () => {
             Math.max(y, window.innerHeight - y)
         );
 
-        // @ts-ignore
+        // @ts-expect-error -- startViewTransition is not yet in all TS DOM libs
         const transition = document.startViewTransition(() => {
             setTheme(newTheme);
         });

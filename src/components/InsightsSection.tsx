@@ -1,77 +1,68 @@
-import {
-  motion,
-  useScroll,
-  useTransform,
-  useSpring,
-  useInView,
-} from "framer-motion";
-import { useRef, useState, useEffect } from "react";
+import { motion, useInView } from "framer-motion";
+import { useRef, useEffect, useState } from "react";
 import { ArrowUpRight, Clock, Calendar } from "lucide-react";
 import { LineReveal, Magnetic } from "./AnimationComponents";
 import { useNavigate } from "react-router-dom";
 import { api } from "@/services/api";
+import type { BlogPost } from "@/types/api";
 import DOMPurify from "dompurify";
+
+interface InsightDisplay {
+  id: number;
+  title: string;
+  image: string;
+  category: string;
+  stack: string;
+  excerpt: string;
+  date: string;
+  readTime: string;
+  slug: string;
+}
 
 export const InsightsSection = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const isInView = useInView(containerRef, { once: true, margin: "-10%" });
-  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
-  const [displayedInsights, setDisplayedInsights] = useState<any[]>([]);
+  const [displayedInsights, setDisplayedInsights] = useState<InsightDisplay[]>([]);
   const navigate = useNavigate();
 
   useEffect(() => {
+    let cancelled = false;
     api.blogs.getAll().then((data) => {
-      const mapped = data.slice(0, 3).map((item: any) => ({
+      if (cancelled) return;
+      const mapped = data.slice(0, 3).map((item: BlogPost) => ({
         ...item,
         image: item.blogImage,
         category: 'Insights',
         stack: item.stack,
-        excerpt: item.content?.substring(0, 110) + '...',
+        excerpt: (item.content?.substring(0, 110) ?? '') + '...',
         date: item.uploadDate,
         readTime: item.readTime || '5',
         slug: item.slug
       }));
       setDisplayedInsights(mapped);
-    }).catch(() => {});
+    }).catch(() => {
+      // API unavailable — section stays empty
+    });
+    return () => { cancelled = true; };
   }, []);
 
-  const { scrollYProgress } = useScroll({
-    target: containerRef,
-    offset: ["start end", "end start"],
-  });
 
-  const smoothProgress = useSpring(scrollYProgress, {
-    stiffness: 50,
-    damping: 20,
-  });
-  const headerY = useTransform(smoothProgress, [0, 0.3], [100, 0]);
-  const headerOpacity = useTransform(smoothProgress, [0, 0.3], [0, 1]);
-
-  const handleArticleClick = (article: any) => {
+  const handleArticleClick = (article: InsightDisplay) => {
     navigate(`/articles/${article.slug || article.id}`);
     window.scrollTo(0, 0);
   };
 
   return (
     <section
-      className="section-padding md:py-20 py-12 relative overflow-hidden"
+      className="section-forced-dark section-padding md:py-20 py-12 overflow-hidden"
       ref={containerRef}
     >
-      {/* Floating background elements */}
-      <motion.div
-        className="absolute top-40 right-0 w-[500px] h-[500px] rounded-full bg-foreground/[0.02] blur-3xl"
-        animate={{
-          scale: [1, 1.2, 1],
-          x: [0, 50, 0],
-        }}
-        transition={{ duration: 15, repeat: Infinity }}
-      />
 
       <div className="max-w-[1800px] mx-auto relative z-10">
         {/* Header with parallax */}
         <motion.div
-          className="flex items-center gap-4 mb-20"
-          style={{ y: headerY, opacity: headerOpacity }}
+          className="flex items-center gap-4 mb-12"
+          initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
         >
           <motion.span className="number-label">/08</motion.span>
           <LineReveal className="h-px bg-border flex-1" delay={0.3} />
@@ -81,14 +72,14 @@ export const InsightsSection = () => {
         </motion.div>
 
         {/* Title Grid */}
-        <div className="grid lg:grid-cols-2 gap-16 mb-24">
+        <div className="grid lg:grid-cols-2 gap-8 md:gap-12 mb-10 md:mb-16">
           <div className="overflow-hidden">
             <motion.h2
-              className="text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-bold leading-[0.95] pb-4"
-              initial={{ y: "120%", rotateX: -45 }}
-              animate={isInView ? { y: 0, rotateX: 0 } : {}}
+              className="text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold leading-[0.95] pb-4"
+              initial={{ y: "120%" }}
+              animate={isInView ? { y: 0 } : {}}
               transition={{
-                duration: 1.4,
+                duration: 1,
                 ease: [0.25, 0.1, 0.25, 1],
                 delay: 0.2,
               }}
@@ -109,105 +100,56 @@ export const InsightsSection = () => {
         </div>
 
         {/* Insights Grid with Advanced Hover Effects */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-12">
           {displayedInsights.map((insight, index) => (
-            <motion.article
+            <article
               itemScope
               itemType="https://schema.org/BlogPosting"
               key={insight.id}
-              className="group cursor-pointer"
+              className="group cursor-pointer min-w-0"
               data-cursor="Read"
-              initial={{ opacity: 0, y: 100, rotateY: -10 }}
-              animate={isInView ? { opacity: 1, y: 0, rotateY: 0 } : {}}
-              transition={{
-                duration: 1.2,
-                delay: 0.4 + index * 0.15,
-                ease: [0.25, 0.1, 0.25, 1],
-              }}
-              onMouseEnter={() => setHoveredIndex(index)}
-              onMouseLeave={() => setHoveredIndex(null)}
               onClick={() => handleArticleClick(insight)}
-              style={{ transformStyle: "preserve-3d" }}
             >
               {/* Image Container with Multiple Layers */}
               <div className="relative overflow-hidden rounded-2xl mb-6 aspect-[4/3]">
-                {/* Background blur layer */}
-                <div
-                  className="absolute inset-0 bg-foreground/5 backdrop-blur-xl transition-opacity duration-500"
-                  style={{ opacity: hoveredIndex === index ? 1 : 0 }}
-                />
+                {/* Background overlay layer */}
+                <div className="absolute inset-0 bg-foreground/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
-                {/* Main Image with Parallax */}
-                <motion.div
-                  className="absolute inset-0"
-                  animate={{ scale: hoveredIndex === index ? 1.15 : 1 }}
-                  transition={{ duration: 0.8 }}
-                >
-                  <motion.img
+                {/* Main Image */}
+                <div className="absolute inset-0 transition-transform duration-700 group-hover:scale-105">
+                  <img
                     src={insight.image}
                     alt={`${insight.title} – Forrof software agency insights`}
                     className="w-full h-full object-cover"
                     loading="lazy"
-                    initial={{ scale: 1.4, opacity: 0 }}
-                    animate={isInView ? { scale: 1, opacity: 1 } : {}}
-                    transition={{ duration: 1.8, delay: 0.5 + index * 0.15 }}
                   />
-                  {/* Brightness overlay (composited opacity instead of filter) */}
-                  <div
-                    className="absolute inset-0 bg-black transition-opacity duration-700"
-                    style={{ opacity: hoveredIndex === index ? 0.3 : 0 }}
-                  />
-                </motion.div>
+                  <div className="absolute inset-0 bg-black opacity-0 group-hover:opacity-30 transition-opacity duration-700" />
+                </div>
 
                 {/* Gradient overlay */}
-                <motion.div
-                  className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent"
-                  animate={{ opacity: hoveredIndex === index ? 0.8 : 0.5 }}
-                  transition={{ duration: 0.5 }}
-                />
+                <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent opacity-50 group-hover:opacity-80 transition-opacity duration-500" />
 
                 {/* Stack Badges */}
                 <div className="absolute top-6 left-6 flex flex-wrap gap-2 z-10">
                   {insight.stack?.split(",").map((tag: string, i: number) => (
-                    <motion.span
+                    <span
                       key={i}
                       className="px-4 py-2 bg-foreground text-background text-xs font-semibold rounded-full"
-                      initial={{ opacity: 0, y: -30, scale: 0.8 }}
-                      animate={isInView ? { opacity: 1, y: 0, scale: 1 } : {}}
-                      transition={{
-                        delay: 0.7 + index * 0.15 + i * 0.1,
-                        type: "spring",
-                      }}
-                      whileHover={{ scale: 1.1 }}
                     >
                       {tag.trim()}
-                    </motion.span>
+                    </span>
                   ))}
                 </div>
                 {/* Read More Arrow */}
-                <motion.div
-                  className="absolute bottom-6 right-6 w-14 h-14 bg-foreground rounded-full flex items-center justify-center"
-                  initial={{ scale: 0, opacity: 0, rotate: -180 }}
-                  animate={{
-                    scale: hoveredIndex === index ? 1 : 0,
-                    opacity: hoveredIndex === index ? 1 : 0,
-                    rotate: hoveredIndex === index ? 0 : -180,
-                  }}
-                  transition={{ duration: 0.5 }}
-                >
+                <div className="absolute bottom-6 right-6 w-14 h-14 bg-foreground rounded-full flex items-center justify-center scale-0 opacity-0 -rotate-180 group-hover:scale-100 group-hover:opacity-100 group-hover:rotate-0 transition-all duration-500">
                   <ArrowUpRight className="text-background" size={20} />
-                </motion.div>
+                </div>
               </div>
 
-              {/* Content with Staggered Animation */}
+              {/* Content */}
               <div className="space-y-4">
                 {/* Meta Info */}
-                <motion.div
-                  className="flex items-center gap-4 text-sm text-muted-foreground"
-                  initial={{ opacity: 0 }}
-                  animate={isInView ? { opacity: 1 } : {}}
-                  transition={{ delay: 0.8 + index * 0.15 }}
-                >
+                <div className="flex items-center gap-4 text-sm text-muted-foreground">
                   <span className="flex items-center gap-2">
                     <Calendar size={14} />
                     {insight.date}
@@ -217,59 +159,33 @@ export const InsightsSection = () => {
                     <Clock size={14} />
                     {insight.readTime} minutes read
                   </span>
-                </motion.div>
-
-                {/* Title with Hover Effect */}
-                <div className="overflow-hidden">
-                  <motion.h3
-                    className="text-xl md:text-2xl font-semibold leading-tight"
-                    initial={{ y: "100%" }}
-                    animate={isInView ? { y: 0 } : {}}
-                    transition={{ duration: 0.8, delay: 0.9 + index * 0.15 }}
-                  >
-                    <motion.span
-                      className="inline-block"
-                      animate={{ x: hoveredIndex === index ? 10 : 0 }}
-                      transition={{ duration: 0.4 }}
-                    >
-                      {insight.title}
-                    </motion.span>
-                  </motion.h3>
                 </div>
 
-                {/* Excerpt with Fade */}
-                <motion.div
-                  style={{ width: "100px" }}
+                {/* Title */}
+                <h3 className="text-xl md:text-2xl font-semibold leading-tight break-words">
+                  <span className="inline-block group-hover:translate-x-2.5 transition-transform duration-400">
+                    {insight.title}
+                  </span>
+                </h3>
+
+                {/* Excerpt */}
+                <div
                   className="text-muted-foreground text-sm leading-relaxed"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={isInView ? { opacity: 1, y: 0 } : {}}
-                  transition={{ delay: 1 + index * 0.15 }}
                   dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(insight.excerpt) }}
                 />
 
                 {/* Read More Link */}
-                <motion.div // Changed to div to avoid nested anchor interactions if needed, but handleArticleClick handles it
-                  className="inline-flex items-center gap-2 text-sm font-medium group/link text-foreground"
-                  initial={{ opacity: 0 }}
-                  animate={isInView ? { opacity: 1 } : {}}
-                  transition={{ delay: 1.1 + index * 0.15 }}
-                >
+                <div className="inline-flex items-center gap-2 text-sm font-medium group/link text-foreground">
                   <span className="relative">
                     Read Article
-                    <motion.span
-                      className="absolute bottom-0 left-0 w-full h-px bg-foreground origin-left"
-                      initial={{ scaleX: 0 }}
-                      whileHover={{ scaleX: 1 }}
-                      transition={{ duration: 0.3 }}
-                    />
                   </span>
                   <ArrowUpRight
                     size={14}
                     className="group-hover/link:rotate-45 transition-transform"
                   />
-                </motion.div>
+                </div>
               </div>
-            </motion.article>
+            </article>
           ))}
         </div>
 
@@ -288,17 +204,12 @@ export const InsightsSection = () => {
                 navigate("/articles");
                 window.scrollTo(0, 0);
               }}
-              className="inline-flex items-center gap-3 px-10 py-5 border border-border rounded-full overflow-hidden relative group"
+              className="inline-flex items-center gap-3 px-10 py-5 rounded-full text-white overflow-hidden relative group"
+              style={{ background: "linear-gradient(135deg, #126b66, #00d4aa)" }}
               data-cursor="View"
-              whileHover={{ scale: 1.02 }}
+              whileHover={{ scale: 1.03, boxShadow: "0 0 20px rgba(72, 240, 231, 0.5), 0 0 40px rgba(72, 240, 231, 0.25), 0 0 60px rgba(72, 240, 231, 0.1)" }}
               whileTap={{ scale: 0.98 }}
             >
-              <motion.span
-                className="absolute inset-0 bg-foreground"
-                initial={{ x: "-100%", skewX: -20 }}
-                whileHover={{ x: 0, skewX: 0 }}
-                transition={{ duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
-              />
               <span className="relative z-10 font-medium">All Insights</span>
               <ArrowUpRight size={18} className="relative z-10" />
             </motion.a>

@@ -1,16 +1,59 @@
-import React, { useRef, useLayoutEffect, Suspense, useMemo } from "react";
-import { Canvas, useFrame } from "@react-three/fiber";
+import React, { useRef, useLayoutEffect, Suspense, useEffect } from "react";
+import { Canvas, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { Stars, Preload } from "@react-three/drei";
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { EarthScene } from "./Earth3D";
 
-gsap.registerPlugin(ScrollTrigger);
+// Module-level visibility — bridges the React/Canvas boundary
+let _globeVisible = true;
+let _startLoop: (() => void) | null = null;
 
-import { useTheme } from "@/context/ThemeContext";
+// Lives inside Canvas — self-scheduling loop that fully stops when off-screen.
+// Unlike useFrame (fires every rAF even when idle), this schedules zero callbacks
+// when the globe scrolls out of view, freeing the main thread for CSS animations.
+const FrameDriver: React.FC = () => {
+    const { invalidate } = useThree();
+    const rafId = useRef(0);
+    const running = useRef(false);
+    const lastRender = useRef(0);
 
-const HeroGlobeScene: React.FC<{ isLightMode: boolean }> = ({ isLightMode }) => {
+    useEffect(() => {
+        let active = true;
+
+        const tick = () => {
+            if (!active || !_globeVisible) {
+                running.current = false;
+                return; // fully stops — no more rAF scheduling
+            }
+            const now = performance.now();
+            if (now - lastRender.current >= 33) { // ~30fps cap
+                lastRender.current = now;
+                invalidate();
+            }
+            rafId.current = requestAnimationFrame(tick);
+        };
+
+        const start = () => {
+            if (running.current || !active) return;
+            running.current = true;
+            rafId.current = requestAnimationFrame(tick);
+        };
+
+        // Expose start so IntersectionObserver can restart the loop
+        _startLoop = start;
+        start();
+
+        return () => {
+            active = false;
+            _startLoop = null;
+            cancelAnimationFrame(rafId.current);
+        };
+    }, [invalidate]);
+
+    return null;
+};
+
+const HeroGlobeScene: React.FC = () => {
     const scrollProxy = useRef({
         scale: 1,
         rotationSpeed: 0.02,
@@ -19,99 +62,116 @@ const HeroGlobeScene: React.FC<{ isLightMode: boolean }> = ({ isLightMode }) => 
         positionZ: 0,
     });
 
-    // Setup GSAP ScrollTrigger
     useLayoutEffect(() => {
-        const ctx = gsap.context(() => {
-            const isMobile = window.innerWidth < 768;
+        const isMobile = window.innerWidth < 768;
+        const endPx = 1500;
+        let lastScroll = -1;
 
-            gsap.to(scrollProxy.current, {
-                scale: isMobile ? 1.3 : 1.8,
-                positionZ: isMobile ? 0 : 2,
-                positionY: isMobile ? -0.5 : -1,
-                rotationSpeed: 0.02,
-                scrollTrigger: {
-                    trigger: document.body,
-                    start: "top top",
-                    end: "+=1500",
-                    scrub: 1.5,
-                },
-            });
-        });
-        return () => ctx.revert();
+        // Replace GSAP ScrollTrigger scrub with a lightweight native handler.
+        // GSAP scrub: true on document.body registers a global listener that
+        // fires on EVERY scroll pixel for the ENTIRE page, even 5000px down.
+        // This native version stops processing once past the hero range.
+        const onScroll = () => {
+            const y = window.scrollY;
+            if (y === lastScroll) return;
+            lastScroll = y;
+
+            if (y > endPx) return; // past hero — skip entirely
+
+            const progress = Math.min(1, Math.max(0, y / endPx));
+            const proxy = scrollProxy.current;
+            proxy.scale = 1 + progress * (isMobile ? 0.3 : 0.8);
+            proxy.positionZ = isMobile ? 0 : progress * 2;
+            proxy.positionY = progress * (isMobile ? -0.5 : -1);
+        };
+
+        window.addEventListener("scroll", onScroll, { passive: true });
+        onScroll(); // initial state
+
+        return () => window.removeEventListener("scroll", onScroll);
     }, []);
 
     return (
         <>
-            {/* Earth Group */}
-            <group>
-                <EarthScene proxy={scrollProxy} />
-            </group>
+            <EarthScene proxy={scrollProxy} />
 
-            {/* Lighting - Adjusted based on theme */}
-            <ambientLight intensity={isLightMode ? 2.5 : 0.15} />
-            <directionalLight
-                position={[10, 5, 5]}
-                intensity={isLightMode ? 4.5 : 2.5}
-                color="#fff5f0"
-                castShadow
-            />
-            <pointLight position={[-15, -10, -10]} intensity={isLightMode ? 2.5 : 0.8} color="#4477ff" />
-            <pointLight position={[0, 10, 5]} intensity={isLightMode ? 2.5 : 0.5} color="#ffffff" />
+            {/* Sun from the right — matches shader SUN_DIR [6,2,2] */}
+            <ambientLight intensity={0.10} />
+            <directionalLight position={[6, 2, 2]} intensity={2.2} color="#fff5e8" />
 
+            {/* Dense starfield */}
             <Stars
-                radius={100}
-                depth={50}
-                count={5000}
-                factor={4}
+                radius={80}
+                depth={60}
+                count={6000}
+                factor={5}
                 saturation={0}
                 fade
-                speed={0.5}
+                speed={0.3}
+            />
+            {/* Medium stars */}
+            <Stars
+                radius={150}
+                depth={100}
+                count={5000}
+                factor={3}
+                saturation={0}
+                fade
+                speed={0.15}
+            />
+            {/* Tiny distant stars */}
+            <Stars
+                radius={250}
+                depth={150}
+                count={4000}
+                factor={1.5}
+                saturation={0.1}
+                fade
+                speed={0.05}
             />
         </>
     );
 };
 
-// Fallback loader component
-const Loader: React.FC = () => {
-    return null;
-};
+const Loader: React.FC = () => null;
 
 export const HeroGlobe: React.FC<{ className?: string }> = ({ className }) => {
-    const { theme } = useTheme();
-    const [isLightMode, setIsLightMode] = React.useState(false);
+    const divRef = useRef<HTMLDivElement>(null);
 
-    React.useEffect(() => {
-        const checkTheme = () => {
-            if (theme === "system") {
-                setIsLightMode(!window.matchMedia("(prefers-color-scheme: dark)").matches);
-            } else {
-                setIsLightMode(theme === "light");
-            }
-        };
-
-        checkTheme();
-
-        const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
-        const handleChange = () => checkTheme();
-        mediaQuery.addEventListener("change", handleChange);
-        return () => mediaQuery.removeEventListener("change", handleChange);
-    }, [theme]);
+    // Stop Three.js rendering completely when the globe scrolls out of view.
+    // When hidden: zero rAF callbacks, zero GPU draws — frees main thread for CSS animations.
+    useEffect(() => {
+        const el = divRef.current;
+        if (!el) return;
+        const observer = new IntersectionObserver(
+            ([entry]) => {
+                _globeVisible = entry.isIntersecting;
+                if (entry.isIntersecting && _startLoop) {
+                    _startLoop(); // restart the render loop
+                }
+            },
+            { threshold: 0.01, rootMargin: "200px" }
+        );
+        observer.observe(el);
+        return () => observer.disconnect();
+    }, []);
 
     return (
-        <div className={className}>
+        <div ref={divRef} className={className}>
             <Canvas
                 camera={{ position: [0, 0, 8], fov: 45 }}
                 gl={{
-                    antialias: true,
+                    antialias: false,
                     alpha: true,
                     powerPreference: "high-performance",
                 }}
-                dpr={[1, 2]}
+                dpr={[1, 1.5]}
                 style={{ background: "transparent" }}
-                frameloop="always"
+                frameloop="demand"
             >
                 <Suspense fallback={<Loader />}>
-                    <HeroGlobeScene isLightMode={isLightMode} />
+                    <FrameDriver />
+                    <HeroGlobeScene />
                     <Preload all />
                 </Suspense>
             </Canvas>
